@@ -25,6 +25,8 @@
 
 #include "moving_object.h"
 #include "buttons_count.h"
+#include "demo_task.h"
+#include "state_machine.h"
 
 #ifdef TRACE_FUNCTIONS
 #include "tracer.h"
@@ -38,17 +40,12 @@
 
 static TaskHandle_t BufferSwap = NULL;
 static TaskHandle_t Task1 = NULL;
+static TaskHandle_t Task2 = NULL;
 static TaskHandle_t CheckInputTask = NULL;
+static TaskHandle_t StateMachine = NULL;
 
 SemaphoreHandle_t DrawSignal = NULL;
 SemaphoreHandle_t ScreenLock = NULL;
-
-
-circle_moving_t circle_moving1 = {0, 0, 40, Red};
-rect_moving_t rect_moving1 = {0, 0, 80, 80, Green};
-coord_t triangle1[] = {{SCREEN_WIDTH/2, SCREEN_HEIGHT/2-40}, {SCREEN_WIDTH/2-45,
-        SCREEN_HEIGHT/2+40}, {SCREEN_WIDTH/2+45, SCREEN_HEIGHT/2+40}};
-text_moving_t text_moving1 = { 0, 0, {0}, 0, 0, Orange, 100, 0 };
 
 
 void vSwapBuffers(void *pvParameters)
@@ -62,46 +59,6 @@ void vSwapBuffers(void *pvParameters)
         gfxEventFetchEvents(FETCH_EVENT_BLOCK);
         xSemaphoreGive(DrawSignal);
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(frameratePeriod));
-    }
-}
-
-
-void vTask1(void *pvParameters)
-{
-    TickType_t xLastWakeTime, prevWakeTime;
-    xLastWakeTime = xTaskGetTickCount();
-    prevWakeTime = xLastWakeTime;
-
-    while(1){
-        if(DrawSignal)
-            if(xSemaphoreTake(DrawSignal, portMAX_DELAY) ==
-                pdTRUE){
-                    xLastWakeTime = xTaskGetTickCount();
-
-                    gfxDrawClear(White);
-                    
-                    updateCirclePosition(&circle_moving1, xLastWakeTime - prevWakeTime);                  
-                    gfxDrawCircle(circle_moving1.x, circle_moving1.y, circle_moving1.radius,
-                                circle_moving1.colour);
-
-                    updateRectPosition(&rect_moving1, xLastWakeTime - prevWakeTime);
-                    gfxDrawFilledBox(rect_moving1.x, rect_moving1.y, rect_moving1.w,
-                                rect_moving1.h, rect_moving1.colour);
-
-                    gfxDrawTriangle(&triangle1[0], Blue);
-
-                    writePressedButtonsCount();
-
-                    writeStaticText();
-                   
-                    writeMovingText(&text_moving1, xLastWakeTime, prevWakeTime);
-
-                    writeMouseCoord();
-
-                    moveScreenInMouseDirection();
-
-                    prevWakeTime = xLastWakeTime;   
-                }
     }
 }
 
@@ -159,12 +116,25 @@ int main(int argc, char *argv[])
         goto err_screen_lock;
     }
 
+prints("###\n");
+    if (xTaskCreate(vStateMachineTask, "StateMachine",
+                    512, NULL,
+                    configMAX_PRIORITIES - 1, &StateMachine) != pdPASS) {
+        PRINT_TASK_ERROR("StateMachine");
+        goto err_statemachinetask;
+    }
 
 
     if (xTaskCreate(vTask1, "Task1", mainGENERIC_STACK_SIZE *2, NULL,
                         mainGENERIC_PRIORITY, &Task1) != pdPASS) {
             PRINT_TASK_ERROR("Task1");
             goto err_task1;
+        }
+
+    if (xTaskCreate(vTask2, "Task2", mainGENERIC_STACK_SIZE *2, NULL,
+                        mainGENERIC_PRIORITY, &Task2) != pdPASS) {
+            PRINT_TASK_ERROR("Task2");
+            goto err_task2;
         }
     
     if (xTaskCreate(vSwapBuffers, "BufferSwapTask",
@@ -180,6 +150,10 @@ int main(int argc, char *argv[])
         PRINT_TASK_ERROR("CheckInputTask");
         goto err_check_input_task;
                     }
+
+
+
+    //gfxFUtilPrintTaskStateList();
     
     vTaskStartScheduler();
    
@@ -188,8 +162,12 @@ int main(int argc, char *argv[])
 err_check_input_task:
     vTaskDelete(BufferSwap);
 err_bufferswap:
+    vTaskDelete(Task2);
+err_task2:
     vTaskDelete(Task1);
 err_task1:
+    vTaskDelete(StateMachine);
+err_statemachinetask:
     vSemaphoreDelete(ScreenLock);
 err_screen_lock:
     vSemaphoreDelete(DrawSignal);
