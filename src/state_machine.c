@@ -47,5 +47,10 @@ int xStateMachineInit(void)
         return -1;
     }
 
+    if (xStatesAdd(NULL, vStateThreeEnter, NULL, vStateThreeExit, STATE_THREE,
+                   "State Three")) {
+        return -1;
+    }
+
     return 0;
 }

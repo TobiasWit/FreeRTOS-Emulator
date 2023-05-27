@@ -35,12 +35,11 @@ void vStateTwoEnter(void);
 /// @brief Exit function for state two of the state machine
 void vStateTwoExit(void);
 
-void vTask1(void *pvParameters);
+/// @brief Enter function for state three of the state machine
+void vStateThreeEnter(void);
 
-void vTask2(void *pvParameters);
-
-
-
+/// @brief Exit function for state three of the state machine
+void vStateThreeExit(void);
 
 
 

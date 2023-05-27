@@ -92,38 +92,36 @@ int checkButtonPress(unsigned char keycode, TickType_t *last_pressed, TickType_t
 
 
 
-void vCheckInputTask(void *pvParameters)
+void CheckButtonInput(void)
 {
     static TickType_t last_pressed_A, last_pressed_B, last_pressed_C, last_pressed_D;
     static TickType_t debounce_delay = 100;
 
-    while(1) {
-        vGetButtonInput();
+    vGetButtonInput();
 
-        if (gfxEventGetMouseLeft()){
-                    resetPressedButtonsCount();
-        }
-
-        if (xSemaphoreTake(buttons.lock, 0) == pdTRUE){
-
-            if (checkButtonPress(KEYCODE(A), &last_pressed_A, &debounce_delay)){
-                updatePressedButtonsCount(KEYCODE(A));
-            }
-
-            if (checkButtonPress(KEYCODE(B), &last_pressed_B, &debounce_delay)){
-                updatePressedButtonsCount(KEYCODE(B));
-            }
-
-            if (checkButtonPress(KEYCODE(C), &last_pressed_C, &debounce_delay)){
-                updatePressedButtonsCount(KEYCODE(C));
-            }
-
-            if (checkButtonPress(KEYCODE(D), &last_pressed_D, &debounce_delay)){
-                updatePressedButtonsCount(KEYCODE(D));
-            }
-
-            xSemaphoreGive(buttons.lock);
-        }
-        
+    if (gfxEventGetMouseLeft()){
+                resetPressedButtonsCount();
     }
+
+    if (xSemaphoreTake(buttons.lock, 0) == pdTRUE){
+
+        if (checkButtonPress(KEYCODE(A), &last_pressed_A, &debounce_delay)){
+            updatePressedButtonsCount(KEYCODE(A));
+        }
+
+        if (checkButtonPress(KEYCODE(B), &last_pressed_B, &debounce_delay)){
+            updatePressedButtonsCount(KEYCODE(B));
+        }
+
+        if (checkButtonPress(KEYCODE(C), &last_pressed_C, &debounce_delay)){
+            updatePressedButtonsCount(KEYCODE(C));
+        }
+
+        if (checkButtonPress(KEYCODE(D), &last_pressed_D, &debounce_delay)){
+            updatePressedButtonsCount(KEYCODE(D));
+        }
+
+        xSemaphoreGive(buttons.lock);
+    }
+        
 }

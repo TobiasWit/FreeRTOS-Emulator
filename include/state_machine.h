@@ -10,6 +10,7 @@
 
 #define STATE_ONE 0
 #define STATE_TWO 1
+#define STATE_THREE 2
 
 #define STATE_MACHINE_PERIOD 10
 

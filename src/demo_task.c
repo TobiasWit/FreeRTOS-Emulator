@@ -18,6 +18,7 @@
 
 TaskHandle_t Task1 = NULL;
 TaskHandle_t Task2 = NULL;
+TaskHandle_t Task3 = NULL;
 
 
 
@@ -46,8 +47,9 @@ void vTask1(void *pvParameters)
 
     while(1){
         if(DrawSignal)
-            if(xSemaphoreTake(DrawSignal, portMAX_DELAY) ==
-                pdTRUE){
+            if(xSemaphoreTake(DrawSignal, portMAX_DELAY) == pdTRUE){
+
+                    vGetButtonInput();
                     xLastWakeTime = xTaskGetTickCount();
 
                     gfxDrawClear(White);
@@ -72,6 +74,8 @@ void vTask1(void *pvParameters)
 
                     moveScreenInMouseDirection();
 
+                    CheckButtonInput();
+
                     vCheckStateInput();
 
                     prevWakeTime = xLastWakeTime;   
@@ -94,18 +98,35 @@ void vTask2(void *pvParameters)
 {
     while(1){
         if(DrawSignal)
-            if(xSemaphoreTake(DrawSignal, portMAX_DELAY) ==
-                pdTRUE){
-
-                    gfxDrawClear(White);
+            if(xSemaphoreTake(DrawSignal, portMAX_DELAY) == pdTRUE){
+                    vGetButtonInput();
+                    gfxDrawClear(Green);
                 
-
-                    writeStaticText();
-
-                    writeMouseCoord();
-
-                vCheckStateInput();
+                    vCheckStateInput();
                 }
+    }
+}
+
+void vStateThreeEnter(void)
+{
+    vTaskResume(Task3);
+}
+
+void vStateThreeExit(void)
+{
+    vTaskSuspend(Task3);
+}
+
+void vTask3(void *pvParamters)
+{
+    while(1){
+        if (DrawSignal)
+            if (xSemaphoreTake(DrawSignal, portMAX_DELAY) == pdTRUE){
+                vGetButtonInput();
+                gfxDrawClear(Black);
+                vCheckStateInput();
+            }
+
     }
 }
 
@@ -123,11 +144,20 @@ int xCreateDemoTask(void)
             goto err_task2;
         }
     
+    if (xTaskCreate(vTask3, "Task3", mainGENERIC_STACK_SIZE *2, NULL,
+                        mainGENERIC_PRIORITY + 1, &Task3) != pdPASS) {
+            PRINT_TASK_ERROR("Task3");
+            goto err_task3;
+        }
+    
     vTaskSuspend(Task1);
     vTaskSuspend(Task2);
+    vTaskSuspend(Task3);
 
     return 0;
 
+err_task3:
+    vTaskDelete(Task2);
 err_task2:
     vTaskDelete(Task1);
 err_task1:
@@ -141,6 +171,9 @@ void vDeleteDemoTask(void)
     }
     if (Task2) {
         vTaskDelete(Task2);
+    }
+    if (Task3) {
+        vTaskDelete(Task3);
     }
     
 }
