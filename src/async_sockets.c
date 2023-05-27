@@ -31,7 +31,7 @@
 #include "gfx_print.h"
 
 #include "async_sockets.h"
-#include "demo_tasks.h"
+#include "demo_task.h"
 
 aIO_handle_t udp_soc_one = NULL;
 aIO_handle_t udp_soc_two = NULL;
