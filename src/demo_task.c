@@ -18,7 +18,9 @@
 
 TaskHandle_t Task1 = NULL;
 TaskHandle_t Task2 = NULL;
-TaskHandle_t Task3 = NULL;
+TaskHandle_t TaskCircleBlink1 = NULL;
+TaskHandle_t TaskCircleBlink2 = NULL;
+
 
 
 
@@ -87,48 +89,59 @@ void vTask1(void *pvParameters)
 void vStateTwoEnter(void)
 {
     vTaskResume(Task2);
+    vTaskResume(TaskCircleBlink1);
+    vTaskResume(TaskCircleBlink2);
 }
 
 void vStateTwoExit(void)
 {
     vTaskSuspend(Task2);
+    vTaskSuspend(TaskCircleBlink1);
+    vTaskSuspend(TaskCircleBlink2);
 }
 
-void vTask2(void *pvParameters)
+void vTaskCircleBlink1(void *pvParameters)
 {
     while(1){
-        if(DrawSignal)
-            if(xSemaphoreTake(DrawSignal, portMAX_DELAY) == pdTRUE){
-                    vGetButtonInput();
-                    gfxDrawClear(Green);
-                
-                    vCheckStateInput();
-                }
+        
     }
 }
 
-void vStateThreeEnter(void)
+void vTaskCircleBlink2(void *pvParameters)
 {
-    vTaskResume(Task3);
+    while(1){
+        
+    }
 }
 
-void vStateThreeExit(void)
+void vTask2(void *pvParamters)
 {
-    vTaskSuspend(Task3);
-}
-
-void vTask3(void *pvParamters)
-{
+    circle_moving_t circle_blink_static = {200, 200, 30, Green};
+    circle_moving_t circle_blink_dynamic = {400, 200, 30, Blue};
     while(1){
         if (DrawSignal)
             if (xSemaphoreTake(DrawSignal, portMAX_DELAY) == pdTRUE){
                 vGetButtonInput();
-                gfxDrawClear(Black);
+                gfxDrawClear(White);
+
+
                 vCheckStateInput();
             }
 
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 int xCreateDemoTask(void)
 {
@@ -143,20 +156,32 @@ int xCreateDemoTask(void)
             PRINT_TASK_ERROR("Task2");
             goto err_task2;
         }
-    
-    if (xTaskCreate(vTask3, "Task3", mainGENERIC_STACK_SIZE *2, NULL,
-                        mainGENERIC_PRIORITY + 1, &Task3) != pdPASS) {
-            PRINT_TASK_ERROR("Task3");
-            goto err_task3;
+
+    if (xTaskCreate(vTaskCircleBlink1, "TaskCircleBlink1", mainGENERIC_STACK_SIZE *2, NULL,
+                        mainGENERIC_PRIORITY + 1, &TaskCircleBlink1) != pdPASS) {
+            PRINT_TASK_ERROR("TaskCircleBlink1");
+            goto err_task_circle_blink1;
         }
+
+    if (xTaskCreate(vTaskCircleBlink2, "TaskCircleBlink2", mainGENERIC_STACK_SIZE *2, NULL,
+                        mainGENERIC_PRIORITY + 1, &TaskCircleBlink2) != pdPASS) {
+            PRINT_TASK_ERROR("TaskCircleBlink2");
+            goto err_task_circle_blink2;
+        }
+    
+    
     
     vTaskSuspend(Task1);
     vTaskSuspend(Task2);
-    vTaskSuspend(Task3);
+    vTaskSuspend(TaskCircleBlink1);
+    vTaskSuspend(TaskCircleBlink2);
+    
 
     return 0;
 
-err_task3:
+err_task_circle_blink2:
+    vTaskDelete(TaskCircleBlink1);
+err_task_circle_blink1:
     vTaskDelete(Task2);
 err_task2:
     vTaskDelete(Task1);
@@ -172,8 +197,12 @@ void vDeleteDemoTask(void)
     if (Task2) {
         vTaskDelete(Task2);
     }
-    if (Task3) {
-        vTaskDelete(Task3);
+    if (TaskCircleBlink1) {
+        vTaskDelete(TaskCircleBlink1);
     }
+    if (TaskCircleBlink2) {
+        vTaskDelete(TaskCircleBlink2);
+    }
+    
     
 }

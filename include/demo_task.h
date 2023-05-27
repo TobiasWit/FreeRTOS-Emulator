@@ -5,7 +5,8 @@
 #include "task.h"
 
 extern TaskHandle_t Task1;
-extern TaskHandle_t Task2;
+extern TaskHandle_t TaskCircleBlink1;
+extern TaskHandle_t TaskCircleBlink2;
 extern TaskHandle_t Task3;
 
 
@@ -38,11 +39,11 @@ void vStateTwoEnter(void);
 /// @brief Exit function for state two of the state machine
 void vStateTwoExit(void);
 
-/// @brief Enter function for state three of the state machine
-void vStateThreeEnter(void);
+// /// @brief Enter function for state three of the state machine
+// void vStateThreeEnter(void);
 
-/// @brief Exit function for state three of the state machine
-void vStateThreeExit(void);
+// /// @brief Exit function for state three of the state machine
+// void vStateThreeExit(void);
 
 
 
