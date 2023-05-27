@@ -6,10 +6,6 @@
 
 
 
-extern TaskHandle_t DemoTask1;
-extern TaskHandle_t DemoTask2;
-extern TaskHandle_t DemoSendTask;
-
 /// @brief Structure to be send via UDP, important is that
 /// that the structure is packed using __attribute__((__packed__))
 struct __attribute__((__packed__)) common_struct {
@@ -19,10 +15,10 @@ struct __attribute__((__packed__)) common_struct {
 
 /// @brief Creates the demo tasks found in demo_tasks.c
 /// @return 0 on success
-int xCreateDemoTasks(void);
+int xCreateDemoTask(void);
 
 /// @brief Deletes the demo tasks found in demo_tasks.c
-void vDeleteDemoTasks(void);
+void vDeleteDemoTask(void);
 
 /// @brief Enter function for state one of the state machine
 void vStateOneEnter(void);

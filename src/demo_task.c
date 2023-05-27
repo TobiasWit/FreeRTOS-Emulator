@@ -11,9 +11,15 @@
 #include "draw.h"
 #include "moving_object.h"
 #include "buttons_count.h"
+#include "main.h"
 
+#define mainGENERIC_PRIORITY (tskIDLE_PRIORITY)
+#define mainGENERIC_STACK_SIZE ((unsigned short)2560)
 
 TaskHandle_t Task1 = NULL;
+TaskHandle_t Task2 = NULL;
+
+
 
 circle_moving_t circle_moving1 = {0, 0, 40, Red};
 rect_moving_t rect_moving1 = {0, 0, 80, 80, Green};
@@ -66,6 +72,8 @@ void vTask1(void *pvParameters)
 
                     moveScreenInMouseDirection();
 
+                    vCheckStateInput();
+
                     prevWakeTime = xLastWakeTime;   
                 }
     }
@@ -74,12 +82,12 @@ void vTask1(void *pvParameters)
 
 void vStateTwoEnter(void)
 {
-    //vTaskResume(Task2);
+    vTaskResume(Task2);
 }
 
 void vStateTwoExit(void)
 {
-    //vTaskSuspend(Task2);
+    vTaskSuspend(Task2);
 }
 
 void vTask2(void *pvParameters)
@@ -96,7 +104,43 @@ void vTask2(void *pvParameters)
 
                     writeMouseCoord();
 
-            
+                vCheckStateInput();
                 }
     }
+}
+
+int xCreateDemoTask(void)
+{
+    if (xTaskCreate(vTask1, "Task1", mainGENERIC_STACK_SIZE *2, NULL,
+                        mainGENERIC_PRIORITY + 1, &Task1) != pdPASS) {
+            PRINT_TASK_ERROR("Task1");
+            goto err_task1;
+        }
+
+    if (xTaskCreate(vTask2, "Task2", mainGENERIC_STACK_SIZE *2, NULL,
+                        mainGENERIC_PRIORITY + 1, &Task2) != pdPASS) {
+            PRINT_TASK_ERROR("Task2");
+            goto err_task2;
+        }
+    
+    vTaskSuspend(Task1);
+    vTaskSuspend(Task2);
+
+    return 0;
+
+err_task2:
+    vTaskDelete(Task1);
+err_task1:
+    return -1;
+}
+
+void vDeleteDemoTask(void)
+{
+    if (Task1) {
+        vTaskDelete(Task1);
+    }
+    if (Task2) {
+        vTaskDelete(Task2);
+    }
+    
 }

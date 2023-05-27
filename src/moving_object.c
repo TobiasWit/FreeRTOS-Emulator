@@ -59,7 +59,7 @@ void writeStaticText(void)
 
     gfxFontSetSize((ssize_t)30);
 
-    sprintf(str, "This is a random Text!");
+    sprintf(str, "This is exercise 2.");
 
     if (!gfxGetTextSize((char *)str, &text_width, &text_height))
         gfxDrawText(str, (SCREEN_WIDTH - text_width)/2,

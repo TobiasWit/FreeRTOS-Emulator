@@ -6,12 +6,13 @@
 
 #include <SDL2/SDL_scancode.h>
 
+#include "main.h"
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "semphr.h"
 #include "task.h"
 
-
+#include "gfx_ball.h"
 #include "gfx_draw.h"
 #include "gfx_font.h"
 #include "gfx_event.h"
@@ -22,11 +23,14 @@
 #include "draw.h"
 #include "buttons.h"
 
+#include "AsyncIO.h"
 
 #include "moving_object.h"
 #include "buttons_count.h"
 #include "demo_task.h"
 #include "state_machine.h"
+#include "async_sockets.h"
+#include "async_message_queues.h"
 
 #ifdef TRACE_FUNCTIONS
 #include "tracer.h"
@@ -39,8 +43,7 @@
 
 
 static TaskHandle_t BufferSwap = NULL;
-static TaskHandle_t Task1 = NULL;
-static TaskHandle_t Task2 = NULL;
+
 static TaskHandle_t CheckInputTask = NULL;
 static TaskHandle_t StateMachine = NULL;
 
@@ -99,6 +102,8 @@ int main(int argc, char *argv[])
         goto err_init_safe_print;
     }
 
+    atexit(aIODeinit);
+
     if (xButtonsInit()){
         PRINT_ERROR("Failed to init buttons");
         goto err_buttons_lock;
@@ -116,56 +121,48 @@ int main(int argc, char *argv[])
         goto err_screen_lock;
     }
 
-prints("###\n");
     if (xTaskCreate(vStateMachineTask, "StateMachine",
                     512, NULL,
                     configMAX_PRIORITIES - 1, &StateMachine) != pdPASS) {
         PRINT_TASK_ERROR("StateMachine");
         goto err_statemachinetask;
     }
-
-
-    if (xTaskCreate(vTask1, "Task1", mainGENERIC_STACK_SIZE *2, NULL,
-                        mainGENERIC_PRIORITY, &Task1) != pdPASS) {
-            PRINT_TASK_ERROR("Task1");
-            goto err_task1;
-        }
-
-    if (xTaskCreate(vTask2, "Task2", mainGENERIC_STACK_SIZE *2, NULL,
-                        mainGENERIC_PRIORITY, &Task2) != pdPASS) {
-            PRINT_TASK_ERROR("Task2");
-            goto err_task2;
-        }
     
     if (xTaskCreate(vSwapBuffers, "BufferSwapTask",
-                    mainGENERIC_STACK_SIZE * 2, NULL, configMAX_PRIORITIES,
+                    512, NULL, configMAX_PRIORITIES,
                     &BufferSwap) != pdPASS) {
         PRINT_TASK_ERROR("BufferSwapTask");
         goto err_bufferswap;
     }
 
     if (xTaskCreate(vCheckInputTask, "CheckInputTask",
-                    mainGENERIC_STACK_SIZE * 2, NULL, mainGENERIC_PRIORITY,
+                    mainGENERIC_STACK_SIZE * 2, NULL, mainGENERIC_PRIORITY + 1,
                     &CheckInputTask) != pdPASS){
         PRINT_TASK_ERROR("CheckInputTask");
         goto err_check_input_task;
                     }
 
+    if (xCreateDemoTask()){
+        goto err_demotask;
+    }
 
+    if (xStateMachineInit()){
+        goto err_statemachine;
+    }
 
-    //gfxFUtilPrintTaskStateList();
+    gfxFUtilPrintTaskStateList();
     
     vTaskStartScheduler();
    
     return EXIT_SUCCESS;
 
+err_statemachine:
+    vDeleteDemoTask();
+err_demotask:
+    vTaskDelete(CheckInputTask);
 err_check_input_task:
     vTaskDelete(BufferSwap);
 err_bufferswap:
-    vTaskDelete(Task2);
-err_task2:
-    vTaskDelete(Task1);
-err_task1:
     vTaskDelete(StateMachine);
 err_statemachinetask:
     vSemaphoreDelete(ScreenLock);
