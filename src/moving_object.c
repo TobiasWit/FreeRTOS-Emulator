@@ -123,7 +123,6 @@ void moveScreenInMouseDirection()
 {
     gfxDrawSetGlobalXOffset((gfxEventGetMouseX() - SCREEN_WIDTH/2)/1.7);
     gfxDrawSetGlobalYOffset((gfxEventGetMouseY() - SCREEN_HEIGHT/2)/1.7);
-
 }
 
 

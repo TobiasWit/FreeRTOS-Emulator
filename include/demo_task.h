@@ -5,8 +5,8 @@
 #include "task.h"
 
 extern TaskHandle_t Task1;
-extern TaskHandle_t TaskCircleBlink1;
-extern TaskHandle_t TaskCircleBlink2;
+extern TaskHandle_t CircleBlinkingDynamicTask;
+extern TaskHandle_t CircleBlinkingStaticTask;
 extern TaskHandle_t Task3;
 
 
