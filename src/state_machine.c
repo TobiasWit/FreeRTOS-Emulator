@@ -8,6 +8,18 @@
 #include "state_machine.h"
 #include "states.h"
 
+TaskHandle_t Task1 = NULL;
+
+void vStateOneEnter(void)
+{
+    vTaskResume(Task1);
+}
+
+void vStateOneExit(void)
+{
+    vTaskSuspend(Task1);
+}
+
 int vCheckStateInput(void)
 {
     if (xSemaphoreTake(buttons.lock, 0) == pdTRUE) {

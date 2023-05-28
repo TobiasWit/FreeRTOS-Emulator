@@ -17,6 +17,7 @@ struct __attribute__((__packed__)) common_struct {
     int second_int;
 };
 
+
 /// @brief Creates the demo tasks found in demo_tasks.c
 /// @return 0 on success
 int xCreateDemoTask(void);
@@ -24,11 +25,11 @@ int xCreateDemoTask(void);
 /// @brief Deletes the demo tasks found in demo_tasks.c
 void vDeleteDemoTask(void);
 
-/// @brief Enter function for state one of the state machine
-void vStateOneEnter(void);
+// /// @brief Enter function for state one of the state machine
+// void vStateOneEnter(void);
 
-/// @brief Exit function for state one of the state machine
-void vStateOneExit(void);
+// /// @brief Exit function for state one of the state machine
+// void vStateOneExit(void);
 
 /// @brief Init function for state two of the state machine
 //void vStateTwoInit(void);

@@ -25,7 +25,6 @@
 #define TIME_PERIOD_CIRCLE_BLINKING_STATIC 1000
 #define TIME_PERIOD_CIRCLE_BLINKING_DYNAMIC 500
 
-TaskHandle_t Task1 = NULL;
 TaskHandle_t Task2 = NULL;
 TaskHandle_t CircleBlinkingStaticTask = NULL;
 TaskHandle_t CircleBlinkingDynamicTask = NULL;
@@ -35,66 +34,10 @@ TaskHandle_t CircleBlinkingDynamicTask = NULL;
 StaticTask_t xTaskBuffer;
 StackType_t xStack[STACK_SIZE_STATIC];
 
-circle_moving_t circle_moving1 = {0, 0, 40, Red};
-rect_moving_t rect_moving1 = {0, 0, 80, 80, Green};
-coord_t triangle1[] = {{SCREEN_WIDTH/2, SCREEN_HEIGHT/2-40}, {SCREEN_WIDTH/2-45,
-        SCREEN_HEIGHT/2+40}, {SCREEN_WIDTH/2+45, SCREEN_HEIGHT/2+40}};
-text_moving_t text_moving1 = { 0, 0, {0}, 0, 0, Orange, 100, 0 };
 
 
-void vStateOneEnter(void)
-{
-    vTaskResume(Task1);
-}
 
-void vStateOneExit(void)
-{
-    vTaskSuspend(Task1);
-}
 
-void vTask1(void *pvParameters)
-{
-    TickType_t xLastWakeTime, prevWakeTime;
-    xLastWakeTime = xTaskGetTickCount();
-    prevWakeTime = xLastWakeTime;
-
-    while(1){
-        if(DrawSignal)
-            if(xSemaphoreTake(DrawSignal, portMAX_DELAY) == pdTRUE){
-
-                    vGetButtonInput();
-                    xLastWakeTime = xTaskGetTickCount();
-
-                    gfxDrawClear(White);
-                    
-                    updateCirclePosition(&circle_moving1, xLastWakeTime - prevWakeTime);                  
-                    gfxDrawCircle(circle_moving1.x, circle_moving1.y, circle_moving1.radius,
-                                circle_moving1.colour);
-
-                    updateRectPosition(&rect_moving1, xLastWakeTime - prevWakeTime);
-                    gfxDrawFilledBox(rect_moving1.x, rect_moving1.y, rect_moving1.w,
-                                rect_moving1.h, rect_moving1.colour);
-
-                    gfxDrawTriangle(&triangle1[0], Blue);
-
-                    writePressedButtonsCount();
-
-                    writeStaticText();
-                   
-                    writeMovingText(&text_moving1, xLastWakeTime, prevWakeTime);
-
-                    writeMouseCoord();
-
-                    moveScreenInMouseDirection();
-
-                    CheckButtonInput();
-
-                    vCheckStateInput();
-
-                    prevWakeTime = xLastWakeTime;   
-                }
-    }
-}
 
 
 void vStateTwoEnter(void)
@@ -184,11 +127,7 @@ void vTask2(void *pvParamters)
 
 int xCreateDemoTask(void)
 {
-    if (xTaskCreate(vTask1, "Task1", mainGENERIC_STACK_SIZE, NULL,
-                        mainGENERIC_PRIORITY + 1, &Task1) != pdPASS) {
-            PRINT_TASK_ERROR("Task1");
-            goto err_task1;
-        }
+    
 
     if (xTaskCreate(vTask2, "Task2", mainGENERIC_STACK_SIZE, NULL,
                         mainGENERIC_PRIORITY + 1, &Task2) != pdPASS) {
@@ -212,7 +151,7 @@ int xCreateDemoTask(void)
     }
     
      
-    vTaskSuspend(Task1);
+    //vTaskSuspend(Task1);
     vTaskSuspend(Task2);
     vTaskSuspend(CircleBlinkingDynamicTask);
     vTaskSuspend(CircleBlinkingStaticTask);
@@ -225,16 +164,11 @@ err_circle_blinking_static_task:
 err_circle_blinking_dynamic_task:
     vTaskDelete(Task2);
 err_task2:
-    vTaskDelete(Task1);
-err_task1:
     return -1;
 }
 
 void vDeleteDemoTask(void)
 {
-    if (Task1) {
-        vTaskDelete(Task1);
-    }
     if (Task2) {
         vTaskDelete(Task2);
     }
