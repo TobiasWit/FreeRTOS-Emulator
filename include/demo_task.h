@@ -24,11 +24,7 @@ int xCreateDemoTask(void);
 /// @brief Deletes the demo tasks found in demo_tasks.c
 void vDeleteDemoTask(void);
 
-/// @brief Enter function for state one of the state machine
-void vStateOneEnter(void);
 
-/// @brief Exit function for state one of the state machine
-void vStateOneExit(void);
 
 /// @brief Init function for state two of the state machine
 //void vStateTwoInit(void);

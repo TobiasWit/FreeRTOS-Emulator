@@ -105,3 +105,6 @@ void writeMouseCoord();
  * devided by 1.7 just so the screen will move slower than the cursor
 */
 void moveScreenInMouseDirection();
+
+
+void vMovingObjectsDisplay(void *pvParameters);
