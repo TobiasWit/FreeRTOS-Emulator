@@ -106,4 +106,4 @@ void writeMouseCoord();
 */
 void moveScreenInMouseDirection();
 
-void vTask1(void *pvParameters);
+void vMovingObjectsDisplay(void *pvParameters);

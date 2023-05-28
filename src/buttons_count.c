@@ -95,7 +95,7 @@ int checkButtonPress(unsigned char keycode, TickType_t *last_pressed, TickType_t
 void CheckButtonInput(void)
 {
     static TickType_t last_pressed_A, last_pressed_B, last_pressed_C, last_pressed_D;
-    static TickType_t debounce_delay = 100;
+    static TickType_t debounce_delay = 300;
 
     vGetButtonInput();
 

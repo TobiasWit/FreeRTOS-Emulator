@@ -1,23 +1,39 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "queue.h"
+#include "gfx_draw.h"
 
 #include "buttons.h"
 #include "main.h"
-#include "demo_task.h"
+#include "circle_blinking_display.h"
 #include "state_machine.h"
 #include "states.h"
 
-TaskHandle_t Task1 = NULL;
 
 void vStateOneEnter(void)
 {
-    vTaskResume(Task1);
+    vTaskResume(MovingObjectsDisplay);
 }
 
 void vStateOneExit(void)
 {
-    vTaskSuspend(Task1);
+    vTaskSuspend(MovingObjectsDisplay);
+}
+
+void vStateTwoEnter(void)
+{
+    vTaskResume(CircleBlinkingDisplay);
+    vTaskResume(CircleBlinkingStaticTask);
+    vTaskResume(CircleBlinkingDynamicTask);
+    gfxDrawSetGlobalXOffset(0);
+    gfxDrawSetGlobalYOffset(0);
+}
+
+void vStateTwoExit(void)
+{
+    vTaskSuspend(CircleBlinkingDisplay);
+    vTaskSuspend(CircleBlinkingStaticTask);
+    vTaskSuspend(CircleBlinkingDynamicTask);
 }
 
 int vCheckStateInput(void)

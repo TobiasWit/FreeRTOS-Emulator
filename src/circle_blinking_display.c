@@ -10,7 +10,7 @@
 #include "FreeRTOSConfig.h"
 
 #include "main.h"
-#include "demo_task.h"
+#include "circle_blinking_display.h"
 #include "buttons.h"
 #include "state_machine.h"
 #include "draw.h"
@@ -25,7 +25,7 @@
 #define TIME_PERIOD_CIRCLE_BLINKING_STATIC 1000
 #define TIME_PERIOD_CIRCLE_BLINKING_DYNAMIC 500
 
-TaskHandle_t Task2 = NULL;
+TaskHandle_t CircleBlinkingDisplay = NULL;
 TaskHandle_t CircleBlinkingStaticTask = NULL;
 TaskHandle_t CircleBlinkingDynamicTask = NULL;
 
@@ -37,25 +37,6 @@ StackType_t xStack[STACK_SIZE_STATIC];
 
 
 
-
-
-
-void vStateTwoEnter(void)
-{
-    vTaskResume(Task2);
-    vTaskResume(CircleBlinkingStaticTask);
-    vTaskResume(CircleBlinkingDynamicTask);
-    gfxDrawSetGlobalXOffset(0);
-    gfxDrawSetGlobalYOffset(0);
-}
-
-void vStateTwoExit(void)
-{
-    vTaskSuspend(Task2);
-    vTaskSuspend(CircleBlinkingStaticTask);
-    vTaskSuspend(CircleBlinkingDynamicTask);
-}
-
 void vCircleBlinkingStaticTask(void *pvParameters)
 {
     TickType_t period_counter = 0;
@@ -63,7 +44,7 @@ void vCircleBlinkingStaticTask(void *pvParameters)
         
         period_counter = xTaskGetTickCount() % TIME_PERIOD_CIRCLE_BLINKING_STATIC;
         if (period_counter >= TIME_PERIOD_CIRCLE_BLINKING_STATIC / 2){
-            xTaskNotify(Task2, 0x01, eSetBits);
+            xTaskNotify(CircleBlinkingDisplay, 0x01, eSetBits);
         }
         vTaskDelay(1);
     }
@@ -77,14 +58,14 @@ void vCircleBlinkingDynamicTask(void *pvParameters)
         
         period_counter = xTaskGetTickCount() % TIME_PERIOD_CIRCLE_BLINKING_DYNAMIC;
         if (period_counter >= TIME_PERIOD_CIRCLE_BLINKING_DYNAMIC / 2){
-            xTaskNotify(Task2, 0x02, eSetBits);
+            xTaskNotify(CircleBlinkingDisplay, 0x02, eSetBits);
         }
         vTaskDelay(1);
     }
 
 }
 
-void vTask2(void *pvParamters)
+void vCircleBlnkingDisplay(void *pvParamters)
 {
     circle_moving_t circle_blink_static = {SCREEN_WIDTH/2 - 40, SCREEN_HEIGHT/2, 30, Green};
     circle_moving_t circle_blink_dynamic = {SCREEN_WIDTH/2 + 40, SCREEN_HEIGHT/2, 30, Blue};
@@ -115,23 +96,13 @@ void vTask2(void *pvParamters)
 }
 
 
-
-
-
-
-
-
-
-
-
-
 int xCreateDemoTask(void)
 {
     
 
-    if (xTaskCreate(vTask2, "Task2", mainGENERIC_STACK_SIZE, NULL,
-                        mainGENERIC_PRIORITY + 1, &Task2) != pdPASS) {
-            PRINT_TASK_ERROR("Task2");
+    if (xTaskCreate(vCircleBlnkingDisplay, "CircleBlinkingDisplay", mainGENERIC_STACK_SIZE, NULL,
+                        mainGENERIC_PRIORITY + 1, &CircleBlinkingDisplay) != pdPASS) {
+            PRINT_TASK_ERROR("CircleBlinkingDisplay");
             goto err_task2;
         }
 
@@ -150,9 +121,8 @@ int xCreateDemoTask(void)
         goto err_circle_blinking_static_task;
     }
     
-     
-    //vTaskSuspend(Task1);
-    vTaskSuspend(Task2);
+
+    vTaskSuspend(CircleBlinkingDisplay);
     vTaskSuspend(CircleBlinkingDynamicTask);
     vTaskSuspend(CircleBlinkingStaticTask);
  
@@ -162,15 +132,15 @@ int xCreateDemoTask(void)
 err_circle_blinking_static_task:
     vTaskDelete(CircleBlinkingDynamicTask);
 err_circle_blinking_dynamic_task:
-    vTaskDelete(Task2);
+    vTaskDelete(CircleBlinkingDisplay);
 err_task2:
     return -1;
 }
 
 void vDeleteDemoTask(void)
 {
-    if (Task2) {
-        vTaskDelete(Task2);
+    if (CircleBlinkingDisplay) {
+        vTaskDelete(CircleBlinkingDisplay);
     }
     if (CircleBlinkingDynamicTask) {
         vTaskDelete(CircleBlinkingDynamicTask);

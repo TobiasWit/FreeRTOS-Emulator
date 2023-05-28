@@ -27,7 +27,7 @@
 
 #include "moving_object.h"
 #include "buttons_count.h"
-#include "demo_task.h"
+#include "circle_blinking_display.h"
 #include "state_machine.h"
 #include "async_sockets.h"
 #include "async_message_queues.h"
@@ -44,7 +44,7 @@
 
 static TaskHandle_t BufferSwap = NULL;
 static TaskHandle_t StateMachine = NULL;
-static TaskHandle_t Task2 = NULL;
+TaskHandle_t MovingObjectsDisplay = NULL;
 
 SemaphoreHandle_t DrawSignal = NULL;
 SemaphoreHandle_t ScreenLock = NULL;
@@ -134,10 +134,10 @@ int main(int argc, char *argv[])
         goto err_bufferswap;
     }
 
-    if (xTaskCreate(vTask1, "Task1", mainGENERIC_STACK_SIZE, NULL,
-                        mainGENERIC_PRIORITY + 1, &Task1) != pdPASS) {
-            PRINT_TASK_ERROR("Task1");
-            //goto err_task1;
+    if (xTaskCreate(vMovingObjectsDisplay, "MovingObjectsDisplay", mainGENERIC_STACK_SIZE, NULL,
+                        mainGENERIC_PRIORITY + 1, &MovingObjectsDisplay) != pdPASS) {
+            PRINT_TASK_ERROR("MovingObjectsDisplay");
+            goto err_moving_objects_display_task;
         }
 
 
@@ -149,6 +149,9 @@ int main(int argc, char *argv[])
         goto err_statemachine;
     }
 
+    //Suspending taskes, because the state machine is managing them
+    vTaskSuspend (MovingObjectsDisplay);
+
     gfxFUtilPrintTaskStateList();
     
     vTaskStartScheduler();
@@ -158,6 +161,8 @@ int main(int argc, char *argv[])
 err_statemachine:
     vDeleteDemoTask();
 err_demotask:
+    vTaskDelete (MovingObjectsDisplay);
+err_moving_objects_display_task:
     vTaskDelete(BufferSwap);
 err_bufferswap:
     vTaskDelete(StateMachine);

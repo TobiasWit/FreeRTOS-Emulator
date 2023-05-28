@@ -4,10 +4,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-extern TaskHandle_t Task1;
+// extern TaskHandle_t Task1;
 extern TaskHandle_t CircleBlinkingDynamicTask;
 extern TaskHandle_t CircleBlinkingStaticTask;
-extern TaskHandle_t Task3;
+extern TaskHandle_t CircleBlinkingDisplay;
 
 
 /// @brief Structure to be send via UDP, important is that
