@@ -38,12 +38,13 @@
 
 #define KEYCODE(CHAR) SDL_SCANCODE_##CHAR
 
-// #define mainGENERIC_PRIORITY (tskIDLE_PRIORITY)
-// #define mainGENERIC_STACK_SIZE ((unsigned short)2560)
+#define mainGENERIC_PRIORITY (tskIDLE_PRIORITY)
+#define mainGENERIC_STACK_SIZE ((unsigned short)2560)
 
 
 static TaskHandle_t BufferSwap = NULL;
 static TaskHandle_t StateMachine = NULL;
+static TaskHandle_t Task2 = NULL;
 
 SemaphoreHandle_t DrawSignal = NULL;
 SemaphoreHandle_t ScreenLock = NULL;
@@ -133,6 +134,11 @@ int main(int argc, char *argv[])
         goto err_bufferswap;
     }
 
+    if (xTaskCreate(vTask1, "Task1", mainGENERIC_STACK_SIZE, NULL,
+                        mainGENERIC_PRIORITY + 1, &Task1) != pdPASS) {
+            PRINT_TASK_ERROR("Task1");
+            //goto err_task1;
+        }
 
 
     if (xCreateDemoTask()){
