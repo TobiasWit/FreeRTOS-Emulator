@@ -5,34 +5,15 @@
 #include "buttons.h"
 #include "main.h"
 #include "demo_task.h"
-#include "moving_object.h"
 #include "state_machine.h"
 #include "states.h"
-#include "buttons_count.h"
-
-static TaskHandle_t MovingObjectsDisplay = NULL;
-
-void vStateOneEnter(void)
-{
-    vTaskResume(MovingObjectsDisplay);
-}
-
-void vStateOneExit(void)
-{
-    vTaskSuspend(MovingObjectsDisplay);
-    printf("###");
-}
-
-
 
 int vCheckStateInput(void)
 {
     if (xSemaphoreTake(buttons.lock, 0) == pdTRUE) {
-        printf("www");
         if (buttons.buttons[KEYCODE(E)]) {
             buttons.buttons[KEYCODE(E)] = 0;
             xSemaphoreGive(buttons.lock);
-            printf("uuu");
             xStatesIncrementState();
             return 0;
         }

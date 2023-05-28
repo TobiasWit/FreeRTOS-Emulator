@@ -38,13 +38,12 @@
 
 #define KEYCODE(CHAR) SDL_SCANCODE_##CHAR
 
-#define mainGENERIC_PRIORITY (tskIDLE_PRIORITY)
-#define mainGENERIC_STACK_SIZE ((unsigned short)2560)
+// #define mainGENERIC_PRIORITY (tskIDLE_PRIORITY)
+// #define mainGENERIC_STACK_SIZE ((unsigned short)2560)
 
 
 static TaskHandle_t BufferSwap = NULL;
 static TaskHandle_t StateMachine = NULL;
-static TaskHandle_t MovingObjectsDisplay = NULL;
 
 SemaphoreHandle_t DrawSignal = NULL;
 SemaphoreHandle_t ScreenLock = NULL;
@@ -134,12 +133,6 @@ int main(int argc, char *argv[])
         goto err_bufferswap;
     }
 
-    if (xTaskCreate(vMovingObjectsDisplay, "MovingObjectDisplay", mainGENERIC_STACK_SIZE, NULL,
-                        mainGENERIC_PRIORITY + 1, &MovingObjectsDisplay) != pdPASS) {
-            PRINT_TASK_ERROR("MovingObjectDisplay");
-            goto err_moving_objects_display_task;
-        }
-
 
 
     if (xCreateDemoTask()){
@@ -159,8 +152,6 @@ int main(int argc, char *argv[])
 err_statemachine:
     vDeleteDemoTask();
 err_demotask:
-    vTaskDelete(MovingObjectsDisplay);
-err_moving_objects_display_task:
     vTaskDelete(BufferSwap);
 err_bufferswap:
     vTaskDelete(StateMachine);
