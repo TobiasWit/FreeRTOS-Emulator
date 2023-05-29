@@ -30,6 +30,8 @@ TaskHandle_t CircleBlinkingDisplay = NULL;
 TaskHandle_t CircleBlinkingStaticTask = NULL;
 TaskHandle_t CircleBlinkingDynamicTask = NULL;
 TaskHandle_t NotifyButtonPressTask = NULL;
+TaskHandle_t SemaphoreButtonPressTask = NULL;
+SemaphoreHandle_t ButtonPressR = NULL;
 
 
 //static task allocation
@@ -38,7 +40,7 @@ StackType_t xStack[STACK_SIZE_STATIC];
 
 
 
-button_press_tz_t button_press_TZ = {0};
+button_press_tr_t button_press_TR = {0};
 
 
 
@@ -77,16 +79,29 @@ void vNotifyButtonPressTask(void *pvParameters)
     while(1){
         notification = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         if(notification & 0x01){
-            if(xSemaphoreTake(button_press_TZ.lock, portMAX_DELAY) == pdTRUE){
-                button_press_TZ.value[0] ++;
-                xSemaphoreGive(button_press_TZ.lock);
+            if(xSemaphoreTake(button_press_TR.lock, portMAX_DELAY) == pdTRUE){
+                button_press_TR.value[0] ++;
+                xSemaphoreGive(button_press_TR.lock);
             }
         }
     }
     vTaskDelay(10);
 }
 
-void writePressedButtonsCountTZ(void)
+void vSemaphoreButtonPressTask(void *pvPatameters)
+{
+    while(1){
+        if(xSemaphoreTake(ButtonPressR, portMAX_DELAY) == pdTRUE){
+            if(xSemaphoreTake(button_press_TR.lock, portMAX_DELAY) == pdTRUE){
+                button_press_TR.value[1] ++;
+                xSemaphoreGive(button_press_TR.lock);
+            }
+        }
+    }
+    vTaskDelay(10);
+}
+
+void writePressedButtonsCountTR(void)
 {
     static char str[50] = { 0 };
     static int text_width;
@@ -94,11 +109,11 @@ void writePressedButtonsCountTZ(void)
 
     gfxFontSetSize((ssize_t)20);
 
-    sprintf(str, "Button T pressed %d times.", button_press_TZ.value[0]);
+    sprintf(str, "Button T pressed %d times.", button_press_TR.value[0]);
         if (!gfxGetTextSize((char *)str, &text_width, &text_height)){
             gfxDrawText(str, 20, SCREEN_HEIGHT - text_height*3 , Black);
         }
-    sprintf(str, "Button Z pressed %d times.", button_press_TZ.value[1]);
+    sprintf(str, "Button R pressed %d times.", button_press_TR.value[1]);
         if (!gfxGetTextSize((char *)str, &text_width, &text_height)){
             gfxDrawText(str, 20, SCREEN_HEIGHT - text_height*2 , Black);
         }
@@ -135,7 +150,7 @@ void vCircleBlnkingDisplay(void *pvParamters)
 
                 vDrawFPS();
 
-                writePressedButtonsCountTZ();
+                writePressedButtonsCountTR();
 
                 vCheckStateInput();
             }
@@ -176,11 +191,26 @@ int xCreateDemoTask(void)
             goto err_notify_button_press_task;
         }
 
-    button_press_TZ.lock = xSemaphoreCreateMutex();
-        if (!button_press_TZ.lock) {
-        PRINT_ERROR("Failed to create button_press_TZ lock");
-        goto err_button_press_tz_lock;
+    if (xTaskCreate(vSemaphoreButtonPressTask, "SemaphoreButtonPressTask",
+                        mainGENERIC_STACK_SIZE, NULL,
+                        mainGENERIC_PRIORITY, &SemaphoreButtonPressTask) != pdPASS) {
+            PRINT_TASK_ERROR("SemaphoreButtonPressTask");
+            goto err_semaphore_button_press_task;
+        }
+
+    button_press_TR.lock = xSemaphoreCreateMutex();
+        if (!button_press_TR.lock) {
+            PRINT_ERROR("Failed to create button_press_TR lock");
+            goto err_button_press_tr_lock;
     }
+
+    ButtonPressR = xSemaphoreCreateBinary();
+        if(!ButtonPressR){
+            PRINT_ERROR("Failed to create ButtonPresR");
+            goto err_button_press_r;
+        }
+
+    
     
     
 
@@ -192,7 +222,11 @@ int xCreateDemoTask(void)
 
     return 0;
 
-err_button_press_tz_lock:
+err_button_press_r:
+    vSemaphoreDelete(button_press_TR.lock);
+err_button_press_tr_lock:
+    vTaskDelete(SemaphoreButtonPressTask);
+err_semaphore_button_press_task:
     vTaskDelete(NotifyButtonPressTask);
 err_notify_button_press_task:
     vTaskDelete(CircleBlinkingStaticTask);
@@ -218,7 +252,10 @@ void vDeleteDemoTask(void)
     if(NotifyButtonPressTask){
         vTaskDelete(NotifyButtonPressTask);
     }
-    if(button_press_TZ.lock){
-        vSemaphoreDelete(button_press_TZ.lock);
+    if(button_press_TR.lock){
+        vSemaphoreDelete(button_press_TR.lock);
+    }
+    if(ButtonPressR){
+        vSemaphoreDelete(ButtonPressR);
     }
 }

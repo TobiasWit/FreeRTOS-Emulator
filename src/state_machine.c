@@ -28,6 +28,7 @@ void vStateTwoEnter(void)
     vTaskResume(CircleBlinkingDynamicTask);
     vTaskResume(CheckInputTask);
     vTaskResume(NotifyButtonPressTask);
+    vTaskResume(SemaphoreButtonPressTask);
     gfxDrawSetGlobalXOffset(0);
     gfxDrawSetGlobalYOffset(0);
 }
@@ -39,6 +40,7 @@ void vStateTwoExit(void)
     vTaskSuspend(CircleBlinkingDynamicTask);
     vTaskSuspend(CheckInputTask);
     vTaskSuspend(NotifyButtonPressTask);
+    vTaskSuspend(SemaphoreButtonPressTask);
 }
 
 int vCheckStateInput(void)

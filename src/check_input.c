@@ -43,7 +43,7 @@ int checkButtonPress(unsigned char keycode, TickType_t *last_pressed, TickType_t
 void vCheckInputTask(void *pvParameters){
     
     
-    static TickType_t last_pressed_T, last_pressed_Z;
+    static TickType_t last_pressed_T, last_pressed_R;
     static TickType_t debounce_delay = 300;
 
     while(1){
@@ -52,16 +52,12 @@ void vCheckInputTask(void *pvParameters){
 
         if (xSemaphoreTake(buttons.lock, 0) == pdTRUE){
 
-            if (checkButtonPress(KEYCODE(T), &last_pressed_T, &debounce_delay)){
-                
+            if (checkButtonPress(KEYCODE(T), &last_pressed_T, &debounce_delay)){     
                 xTaskNotify(NotifyButtonPressTask, 0x01, eSetBits);
-                
-                //vTaskResume(NotifyButtonPressTask);
-                // vTaskSuspend(NotifyButtonPressTask);
             }
 
-            if (checkButtonPress(KEYCODE(Z), &last_pressed_Z, &debounce_delay)){
-     
+            if (checkButtonPress(KEYCODE(R), &last_pressed_R, &debounce_delay)){
+                xSemaphoreGive(ButtonPressR);
             }
 
             xSemaphoreGive(buttons.lock);

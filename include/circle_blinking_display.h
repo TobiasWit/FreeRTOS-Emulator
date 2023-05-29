@@ -10,12 +10,15 @@ extern TaskHandle_t CircleBlinkingDynamicTask;
 extern TaskHandle_t CircleBlinkingStaticTask;
 extern TaskHandle_t CircleBlinkingDisplay;
 extern TaskHandle_t NotifyButtonPressTask;
+extern TaskHandle_t SemaphoreButtonPressTask;
+
+extern SemaphoreHandle_t ButtonPressR;
 
 
-typedef struct button_press_tz {
+typedef struct button_press_tr {
     unsigned char value[2];
     SemaphoreHandle_t lock;
-} button_press_tz_t;
+} button_press_tr_t;
 
 
 /// @brief Structure to be send via UDP, important is that
