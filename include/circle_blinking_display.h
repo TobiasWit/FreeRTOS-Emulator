@@ -11,6 +11,7 @@ extern TaskHandle_t CircleBlinkingStaticTask;
 extern TaskHandle_t CircleBlinkingDisplay;
 extern TaskHandle_t NotifyButtonPressTask;
 extern TaskHandle_t SemaphoreButtonPressTask;
+extern TaskHandle_t ResetButtonPressTRTask;
 
 extern SemaphoreHandle_t ButtonPressR;
 
@@ -45,11 +46,11 @@ void vDeleteDemoTask(void);
 /// @brief Init function for state two of the state machine
 //void vStateTwoInit(void);
 
-/// @brief Enter function for state two of the state machine
-void vStateTwoEnter(void);
+// /// @brief Enter function for state two of the state machine
+// void vStateTwoEnter(void);
 
-/// @brief Exit function for state two of the state machine
-void vStateTwoExit(void);
+// /// @brief Exit function for state two of the state machine
+// void vStateTwoExit(void);
 
 // /// @brief Enter function for state three of the state machine
 // void vStateThreeEnter(void);

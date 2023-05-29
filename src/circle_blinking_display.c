@@ -31,6 +31,8 @@ TaskHandle_t CircleBlinkingStaticTask = NULL;
 TaskHandle_t CircleBlinkingDynamicTask = NULL;
 TaskHandle_t NotifyButtonPressTask = NULL;
 TaskHandle_t SemaphoreButtonPressTask = NULL;
+TaskHandle_t ResetButtonPressTRTask = NULL;
+
 SemaphoreHandle_t ButtonPressR = NULL;
 
 
@@ -119,6 +121,24 @@ void writePressedButtonsCountTR(void)
         }
 }
 
+void vResetButtonPressTRTask(void *pvParameters)
+{
+    //FALSCH, sollte timer benutzen, nochmal neu machen mit timer
+    TickType_t lastWakeTime;
+    lastWakeTime = xTaskGetTickCount();
+    while(1){
+        if(xTaskGetTickCount() - lastWakeTime >= 15000){
+            if(xSemaphoreTake(button_press_TR.lock, portMAX_DELAY) == pdTRUE){
+                button_press_TR.value[0] = 0;
+                button_press_TR.value[1] = 0;
+                xSemaphoreGive(button_press_TR.lock);
+                lastWakeTime = xTaskGetTickCount();
+            }
+        }
+    }
+    vTaskDelay(10);
+}
+
 void vCircleBlnkingDisplay(void *pvParamters)
 {
     circle_moving_t circle_blink_static = {SCREEN_WIDTH/2 - 40, SCREEN_HEIGHT/2, 30, Green};
@@ -198,6 +218,13 @@ int xCreateDemoTask(void)
             goto err_semaphore_button_press_task;
         }
 
+    if (xTaskCreate(vResetButtonPressTRTask, "ResetButtonPressTRTask",
+                        mainGENERIC_STACK_SIZE, NULL,
+                        mainGENERIC_PRIORITY, &ResetButtonPressTRTask) != pdPASS) {
+            PRINT_TASK_ERROR("ResetButtonPresTRTask");
+            goto err_reset_button_press_tr_task;
+        }
+
     button_press_TR.lock = xSemaphoreCreateMutex();
         if (!button_press_TR.lock) {
             PRINT_ERROR("Failed to create button_press_TR lock");
@@ -218,6 +245,8 @@ int xCreateDemoTask(void)
     vTaskSuspend(CircleBlinkingDynamicTask);
     vTaskSuspend(CircleBlinkingStaticTask);
     vTaskSuspend(NotifyButtonPressTask);
+    vTaskSuspend(SemaphoreButtonPressTask);
+    vTaskSuspend(ResetButtonPressTRTask);
  
 
     return 0;
@@ -225,6 +254,8 @@ int xCreateDemoTask(void)
 err_button_press_r:
     vSemaphoreDelete(button_press_TR.lock);
 err_button_press_tr_lock:
+    vTaskDelete(ResetButtonPressTRTask);
+err_reset_button_press_tr_task:
     vTaskDelete(SemaphoreButtonPressTask);
 err_semaphore_button_press_task:
     vTaskDelete(NotifyButtonPressTask);
@@ -251,6 +282,9 @@ void vDeleteDemoTask(void)
     }
     if(NotifyButtonPressTask){
         vTaskDelete(NotifyButtonPressTask);
+    }
+    if(ResetButtonPressTRTask){
+        vTaskDelete(ResetButtonPressTRTask);
     }
     if(button_press_TR.lock){
         vSemaphoreDelete(button_press_TR.lock);
