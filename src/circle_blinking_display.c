@@ -4,6 +4,7 @@
 #include "gfx_utils.h"
 #include "gfx_print.h"
 #include "gfx_draw.h"
+#include "gfx_font.h"
 
 #include "task.h"
 #include "FreeRTOS.h"
@@ -28,11 +29,16 @@
 TaskHandle_t CircleBlinkingDisplay = NULL;
 TaskHandle_t CircleBlinkingStaticTask = NULL;
 TaskHandle_t CircleBlinkingDynamicTask = NULL;
+TaskHandle_t NotifyButtonPressTask = NULL;
 
 
 //static task allocation
 StaticTask_t xTaskBuffer;
 StackType_t xStack[STACK_SIZE_STATIC];
+
+
+
+button_press_tz_t button_press_TZ = {0};
 
 
 
@@ -65,6 +71,39 @@ void vCircleBlinkingDynamicTask(void *pvParameters)
 
 }
 
+void vNotifyButtonPressTask(void *pvParameters)
+{
+    uint32_t notification = 0;
+    while(1){
+        notification = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        if(notification & 0x01){
+            if(xSemaphoreTake(button_press_TZ.lock, portMAX_DELAY) == pdTRUE){
+                button_press_TZ.value[0] ++;
+                xSemaphoreGive(button_press_TZ.lock);
+            }
+        }
+    }
+    vTaskDelay(10);
+}
+
+void writePressedButtonsCountTZ(void)
+{
+    static char str[50] = { 0 };
+    static int text_width;
+    static int text_height;
+
+    gfxFontSetSize((ssize_t)20);
+
+    sprintf(str, "Button T pressed %d times.", button_press_TZ.value[0]);
+        if (!gfxGetTextSize((char *)str, &text_width, &text_height)){
+            gfxDrawText(str, 20, SCREEN_HEIGHT - text_height*3 , Black);
+        }
+    sprintf(str, "Button Z pressed %d times.", button_press_TZ.value[1]);
+        if (!gfxGetTextSize((char *)str, &text_width, &text_height)){
+            gfxDrawText(str, 20, SCREEN_HEIGHT - text_height*2 , Black);
+        }
+}
+
 void vCircleBlnkingDisplay(void *pvParamters)
 {
     circle_moving_t circle_blink_static = {SCREEN_WIDTH/2 - 40, SCREEN_HEIGHT/2, 30, Green};
@@ -89,6 +128,15 @@ void vCircleBlnkingDisplay(void *pvParamters)
                     gfxDrawCircle(circle_blink_dynamic.x, circle_blink_dynamic.y,
                                 circle_blink_dynamic.radius, circle_blink_dynamic.colour);
                 }
+
+                if (notification & 0x04){
+                    gfxDrawCircle(40, 40, 20, Red);
+                }
+
+                vDrawFPS();
+
+                writePressedButtonsCountTZ();
+
                 vCheckStateInput();
             }
 
@@ -120,15 +168,34 @@ int xCreateDemoTask(void)
         PRINT_TASK_ERROR("CircleBlinkingStaticTask");
         goto err_circle_blinking_static_task;
     }
+
+    if (xTaskCreate(vNotifyButtonPressTask, "NotifyButtonPressTask",
+                        mainGENERIC_STACK_SIZE, NULL,
+                        mainGENERIC_PRIORITY, &NotifyButtonPressTask) != pdPASS) {
+            PRINT_TASK_ERROR("NotifyButtonPressTask");
+            goto err_notify_button_press_task;
+        }
+
+    button_press_TZ.lock = xSemaphoreCreateMutex();
+        if (!button_press_TZ.lock) {
+        PRINT_ERROR("Failed to create button_press_TZ lock");
+        goto err_button_press_tz_lock;
+    }
+    
     
 
     vTaskSuspend(CircleBlinkingDisplay);
     vTaskSuspend(CircleBlinkingDynamicTask);
     vTaskSuspend(CircleBlinkingStaticTask);
+    vTaskSuspend(NotifyButtonPressTask);
  
 
     return 0;
 
+err_button_press_tz_lock:
+    vTaskDelete(NotifyButtonPressTask);
+err_notify_button_press_task:
+    vTaskDelete(CircleBlinkingStaticTask);
 err_circle_blinking_static_task:
     vTaskDelete(CircleBlinkingDynamicTask);
 err_circle_blinking_dynamic_task:
@@ -147,5 +214,11 @@ void vDeleteDemoTask(void)
     }
     if (CircleBlinkingStaticTask) {
         vTaskDelete(CircleBlinkingStaticTask);
+    }
+    if(NotifyButtonPressTask){
+        vTaskDelete(NotifyButtonPressTask);
+    }
+    if(button_press_TZ.lock){
+        vSemaphoreDelete(button_press_TZ.lock);
     }
 }

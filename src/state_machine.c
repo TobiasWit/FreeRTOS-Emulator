@@ -6,6 +6,7 @@
 #include "buttons.h"
 #include "main.h"
 #include "circle_blinking_display.h"
+#include "check_input.h"
 #include "state_machine.h"
 #include "states.h"
 
@@ -25,6 +26,8 @@ void vStateTwoEnter(void)
     vTaskResume(CircleBlinkingDisplay);
     vTaskResume(CircleBlinkingStaticTask);
     vTaskResume(CircleBlinkingDynamicTask);
+    vTaskResume(CheckInputTask);
+    vTaskResume(NotifyButtonPressTask);
     gfxDrawSetGlobalXOffset(0);
     gfxDrawSetGlobalYOffset(0);
 }
@@ -34,6 +37,8 @@ void vStateTwoExit(void)
     vTaskSuspend(CircleBlinkingDisplay);
     vTaskSuspend(CircleBlinkingStaticTask);
     vTaskSuspend(CircleBlinkingDynamicTask);
+    vTaskSuspend(CheckInputTask);
+    vTaskSuspend(NotifyButtonPressTask);
 }
 
 int vCheckStateInput(void)

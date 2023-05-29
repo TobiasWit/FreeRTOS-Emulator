@@ -165,6 +165,8 @@ void vMovingObjectsDisplay(void *pvParameters)
 
                     gfxDrawTriangle(&triangle1[0], Blue);
 
+                    CheckButtonInput();
+
                     writePressedButtonsCount();
 
                     writeStaticText();
@@ -174,8 +176,6 @@ void vMovingObjectsDisplay(void *pvParameters)
                     writeMouseCoord();
 
                     moveScreenInMouseDirection();
-
-                    CheckButtonInput();
 
                     vCheckStateInput();
 

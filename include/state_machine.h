@@ -15,7 +15,6 @@
 #define STATE_MACHINE_PERIOD 10
 
 
-// extern TaskHandle_t Task1;
 
 /// @brief Checks if the button C was pressed and if so increments the system's state
 /// @return 0 on success

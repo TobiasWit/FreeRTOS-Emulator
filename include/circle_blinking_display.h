@@ -1,13 +1,21 @@
-#ifndef __DEMO_TASKS_H__
-#define __DEMO_TASKS_H__
+#ifndef ___CIRCLE_BLINKING_DISPLAY_H__
+#define ___CIRCLE_BLINKING_DISPLAY_H__
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 
 // extern TaskHandle_t Task1;
 extern TaskHandle_t CircleBlinkingDynamicTask;
 extern TaskHandle_t CircleBlinkingStaticTask;
 extern TaskHandle_t CircleBlinkingDisplay;
+extern TaskHandle_t NotifyButtonPressTask;
+
+
+typedef struct button_press_tz {
+    unsigned char value[2];
+    SemaphoreHandle_t lock;
+} button_press_tz_t;
 
 
 /// @brief Structure to be send via UDP, important is that

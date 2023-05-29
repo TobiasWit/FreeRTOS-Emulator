@@ -3,6 +3,7 @@
 #include "gfx_font.h"
 #include "gfx_event.h"
 #include "buttons.h"
+#include "check_input.h"
 
 typedef struct buttons_count{
     int a;
@@ -71,23 +72,6 @@ void resetPressedButtonsCount(void)
     buttons_count1.b = 0;
     buttons_count1.c = 0;
     buttons_count1.d = 0;
-}
-
-int checkButtonPress(unsigned char keycode, TickType_t *last_pressed, TickType_t *debounce_delay)
-{
-    if (buttons.buttons[keycode]){
-        if (xTaskGetTickCount() - *last_pressed >= *debounce_delay){
-            *last_pressed = xTaskGetTickCount();
-            return 1;
-        }
-        else{
-            return 0;
-        }
-    }
-    else{
-        *last_pressed = 0;
-        return 0;
-    }
 }
 
 
