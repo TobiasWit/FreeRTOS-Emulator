@@ -6,9 +6,12 @@
 #include "gfx_draw.h"
 #include "gfx_font.h"
 
+#include <time.h>
 #include "task.h"
 #include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
+#include "timers.h"
+
 
 #include "main.h"
 #include "circle_blinking_display.h"
@@ -32,8 +35,11 @@ TaskHandle_t CircleBlinkingDynamicTask = NULL;
 TaskHandle_t NotifyButtonPressTask = NULL;
 TaskHandle_t SemaphoreButtonPressTask = NULL;
 TaskHandle_t ResetButtonPressTRTask = NULL;
+TaskHandle_t SecondsCounterTask = NULL;
 
 SemaphoreHandle_t ButtonPressR = NULL;
+
+TimerHandle_t ResetButtonCountTRTimer = NULL;
 
 
 //static task allocation
@@ -43,7 +49,7 @@ StackType_t xStack[STACK_SIZE_STATIC];
 
 
 button_press_tr_t button_press_TR = {0};
-
+seconds_counter_t seconds_count1 = {0};
 
 
 
@@ -51,7 +57,6 @@ void vCircleBlinkingStaticTask(void *pvParameters)
 {
     TickType_t period_counter = 0;
     while (1){
-        
         period_counter = xTaskGetTickCount() % TIME_PERIOD_CIRCLE_BLINKING_STATIC;
         if (period_counter >= TIME_PERIOD_CIRCLE_BLINKING_STATIC / 2){
             xTaskNotify(CircleBlinkingDisplay, 0x01, eSetBits);
@@ -123,20 +128,58 @@ void writePressedButtonsCountTR(void)
 
 void vResetButtonPressTRTask(void *pvParameters)
 {
-    //FALSCH, sollte timer benutzen, nochmal neu machen mit timer
-    TickType_t lastWakeTime;
-    lastWakeTime = xTaskGetTickCount();
     while(1){
-        if(xTaskGetTickCount() - lastWakeTime >= 15000){
+        if(ulTaskNotifyTake(pdTRUE, portMAX_DELAY)){
             if(xSemaphoreTake(button_press_TR.lock, portMAX_DELAY) == pdTRUE){
                 button_press_TR.value[0] = 0;
                 button_press_TR.value[1] = 0;
                 xSemaphoreGive(button_press_TR.lock);
+            }
+        }
+
+    vTaskDelay(10);
+    }
+}
+
+void resetButtonCountTRCallback(TimerHandle_t ResetButtonCountTRTimer)
+{
+    xTaskNotifyGive(ResetButtonPressTRTask);
+}
+
+void vSecondsCounterTask(void *pvParameters)
+{
+    TickType_t lastWakeTime;
+    lastWakeTime = xTaskGetTickCount();
+    while(1){
+        if(xTaskGetTickCount() - lastWakeTime >= pdMS_TO_TICKS(1000)){
+            if(xSemaphoreTake(seconds_count1.lock, portMAX_DELAY) == pdTRUE){
+                seconds_count1.value++;
+                xSemaphoreGive(seconds_count1.lock);
                 lastWakeTime = xTaskGetTickCount();
             }
         }
+        
+        // if(xSemaphoreTake(seconds_count1.lock, portMAX_DELAY) == pdTRUE){
+        //         seconds_count1.value ++;
+        //         xSemaphoreGive(seconds_count1.lock);
+        //     }
+        vTaskDelay(5);
     }
-    vTaskDelay(10);
+    
+}
+
+void writeSecondsCount(void)
+{
+    static char str[50] = { 0 };
+    static int text_width;
+    static int text_height;
+
+    gfxFontSetSize((ssize_t)20);
+
+    sprintf(str, "Seconds passed: %d", seconds_count1.value);
+        if (!gfxGetTextSize((char *)str, &text_width, &text_height)){
+            gfxDrawText(str, 20, SCREEN_HEIGHT - text_height*5 , Black);
+        }
 }
 
 void vCircleBlnkingDisplay(void *pvParamters)
@@ -172,11 +215,14 @@ void vCircleBlnkingDisplay(void *pvParamters)
 
                 writePressedButtonsCountTR();
 
+                writeSecondsCount();
+
                 vCheckStateInput();
             }
 
     }
 }
+
 
 
 int xCreateDemoTask(void)
@@ -225,6 +271,13 @@ int xCreateDemoTask(void)
             goto err_reset_button_press_tr_task;
         }
 
+    if (xTaskCreate(vSecondsCounterTask, "SecondsCounterTask",
+                        mainGENERIC_STACK_SIZE, NULL,
+                        mainGENERIC_PRIORITY, &SecondsCounterTask) != pdPASS){
+            PRINT_TASK_ERROR("SecondsCounterTask");
+            goto err_seconds_counter_task;
+        }
+
     button_press_TR.lock = xSemaphoreCreateMutex();
         if (!button_press_TR.lock) {
             PRINT_ERROR("Failed to create button_press_TR lock");
@@ -237,8 +290,19 @@ int xCreateDemoTask(void)
             goto err_button_press_r;
         }
 
-    
-    
+    seconds_count1.lock = xSemaphoreCreateMutex();
+        if (!seconds_count1.lock){
+            PRINT_ERROR("Failed to create seconds_count1.lock");
+            goto err_seconds_count1_lock;
+        }
+
+    ResetButtonCountTRTimer = xTimerCreate("ResetButtonCountTRTimer",
+                    pdMS_TO_TICKS(15000), pdTRUE, (void *)0,
+                    resetButtonCountTRCallback);
+	if (!ResetButtonCountTRTimer) {
+		PRINT_ERROR("Failed to create ResetButtonCountTRTimer");
+		goto err_reset_button_count_tr_timer;
+	}
     
 
     vTaskSuspend(CircleBlinkingDisplay);
@@ -247,13 +311,20 @@ int xCreateDemoTask(void)
     vTaskSuspend(NotifyButtonPressTask);
     vTaskSuspend(SemaphoreButtonPressTask);
     vTaskSuspend(ResetButtonPressTRTask);
+    vTaskSuspend(SecondsCounterTask);
  
 
     return 0;
 
+err_reset_button_count_tr_timer:
+    vSemaphoreDelete(seconds_count1.lock);
+err_seconds_count1_lock:
+    vSemaphoreDelete(ButtonPressR);
 err_button_press_r:
     vSemaphoreDelete(button_press_TR.lock);
 err_button_press_tr_lock:
+    vTaskDelete(SecondsCounterTask);
+err_seconds_counter_task:
     vTaskDelete(ResetButtonPressTRTask);
 err_reset_button_press_tr_task:
     vTaskDelete(SemaphoreButtonPressTask);
@@ -286,10 +357,16 @@ void vDeleteDemoTask(void)
     if(ResetButtonPressTRTask){
         vTaskDelete(ResetButtonPressTRTask);
     }
+    if(SecondsCounterTask){
+        vTaskDelete(SecondsCounterTask);
+    }
     if(button_press_TR.lock){
         vSemaphoreDelete(button_press_TR.lock);
     }
     if(ButtonPressR){
         vSemaphoreDelete(ButtonPressR);
+    }
+    if(ResetButtonCountTRTimer){
+        xTimerDelete(ResetButtonCountTRTimer, 0);
     }
 }

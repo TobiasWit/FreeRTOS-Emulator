@@ -2,6 +2,7 @@
 #include "semphr.h"
 #include "queue.h"
 #include "gfx_draw.h"
+#include "timers.h"
 
 #include "buttons.h"
 #include "main.h"
@@ -30,6 +31,8 @@ void vStateTwoEnter(void)
     vTaskResume(NotifyButtonPressTask);
     vTaskResume(SemaphoreButtonPressTask);
     vTaskResume(ResetButtonPressTRTask);
+    vTaskResume(SecondsCounterTask);
+    xTimerStart(ResetButtonCountTRTimer, 0);
     gfxDrawSetGlobalXOffset(0);
     gfxDrawSetGlobalYOffset(0);
 }
@@ -43,6 +46,8 @@ void vStateTwoExit(void)
     vTaskSuspend(NotifyButtonPressTask);
     vTaskSuspend(SemaphoreButtonPressTask);
     vTaskSuspend(ResetButtonPressTRTask);
+    vTaskSuspend(SecondsCounterTask);
+    xTimerStop(ResetButtonCountTRTimer, 0);
 }
 
 int vCheckStateInput(void)
