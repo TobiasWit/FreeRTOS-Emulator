@@ -10,6 +10,7 @@
 #include "check_input.h"
 #include "state_machine.h"
 #include "states.h"
+#include "scheduling_priorities_test.h"
 
 
 void vStateOneEnter(void)
@@ -49,6 +50,15 @@ void vStateTwoExit(void)
     vTaskSuspend(SecondsCounterTask);
     xTimerStop(ResetButtonCountTRTimer, 0);
 }
+void vStateThreeEnter(void)
+{
+    vTaskResume(DrawScreenExercise4);
+}
+
+void vStateThreeExit(void)
+{
+    vTaskSuspend(DrawScreenExercise4);
+}
 
 int vCheckStateInput(void)
 {
@@ -84,15 +94,15 @@ int xStateMachineInit(void)
         return -1;
     }
 
+    if (xStatesAdd(NULL, vStateThreeEnter, NULL, vStateThreeExit, STATE_THREE,
+                   "State Three")) {
+        return -1;
+    }
+
     if (xStatesAdd(NULL, vStateTwoEnter, NULL, vStateTwoExit, STATE_TWO,
                    "State Two")) {
         return -1;
     }
-
-    // if (xStatesAdd(NULL, vStateThreeEnter, NULL, vStateThreeExit, STATE_THREE,
-    //                "State Three")) {
-    //     return -1;
-    // }
 
     return 0;
 }

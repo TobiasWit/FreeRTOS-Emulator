@@ -29,4 +29,22 @@ void vStateMachineTask(void *pvParameters);
 /// @return 0 on success
 int xStateMachineInit(void);
 
+void vStateOneEnter(void);
+
+/// @brief Exit function for state one of the state machine
+void vStateOneExit(void);
+
+/// @brief Init function for state two of the state machine
+void vStateTwoInit(void);
+
+/// @brief Enter function for state two of the state machine
+void vStateTwoEnter(void);
+
+/// @brief Exit function for state two of the state machine
+void vStateTwoExit(void);
+
+void vStateThreeEnter(void);
+
+void vStateThreeExit(void);
+
 #endif // __STATE_MACHINE_H__

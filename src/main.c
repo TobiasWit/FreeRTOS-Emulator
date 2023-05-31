@@ -30,7 +30,7 @@
 #include "circle_blinking_display.h"
 #include "check_input.h"
 #include "state_machine.h"
-
+#include "scheduling_priorities_test.h"
 
 #include "async_sockets.h"
 #include "async_message_queues.h"
@@ -155,6 +155,10 @@ int main(int argc, char *argv[])
         goto err_demotask;
     }
 
+    if (xCreateSchedulingPrioritiesTestTasks()){
+        goto err_scheduling_priorities_test_tasks;
+    }
+
     if (xStateMachineInit()){
         goto err_statemachine;
     }
@@ -170,6 +174,8 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
 
 err_statemachine:
+    vDeleteSchedulingPrioritiesTestTasks();
+err_scheduling_priorities_test_tasks:
     vDeleteDemoTask();
 err_demotask:
     vTaskDelete (CheckInputTask);

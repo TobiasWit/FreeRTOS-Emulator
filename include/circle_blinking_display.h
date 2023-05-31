@@ -38,34 +38,12 @@ struct __attribute__((__packed__)) common_struct {
     int second_int;
 };
 
-
 /// @brief Creates the demo tasks found in demo_tasks.c
 /// @return 0 on success
 int xCreateDemoTask(void);
 
 /// @brief Deletes the demo tasks found in demo_tasks.c
 void vDeleteDemoTask(void);
-
-// /// @brief Enter function for state one of the state machine
-// void vStateOneEnter(void);
-
-// /// @brief Exit function for state one of the state machine
-// void vStateOneExit(void);
-
-/// @brief Init function for state two of the state machine
-//void vStateTwoInit(void);
-
-// /// @brief Enter function for state two of the state machine
-// void vStateTwoEnter(void);
-
-// /// @brief Exit function for state two of the state machine
-// void vStateTwoExit(void);
-
-// /// @brief Enter function for state three of the state machine
-// void vStateThreeEnter(void);
-
-// /// @brief Exit function for state three of the state machine
-// void vStateThreeExit(void);
 
 void resetButtonCountTRCallback(TimerHandle_t timer);
 
