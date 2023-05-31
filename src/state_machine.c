@@ -53,11 +53,15 @@ void vStateTwoExit(void)
 void vStateThreeEnter(void)
 {
     vTaskResume(DrawScreenExercise4);
+    vTaskResume(Task1);
+    vTaskResume(Task2);
 }
 
 void vStateThreeExit(void)
 {
     vTaskSuspend(DrawScreenExercise4);
+    vTaskSuspend(Task1);
+    vTaskSuspend(Task2);
 }
 
 int vCheckStateInput(void)

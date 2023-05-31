@@ -28,6 +28,39 @@
 #define mainGENERIC_STACK_SIZE ((unsigned short)2560)
 
 TaskHandle_t DrawScreenExercise4 = NULL;
+TaskHandle_t Task1 = NULL;
+TaskHandle_t Task2 = NULL;
+TaskHandle_t Task3 = NULL;
+TaskHandle_t Task4 = NULL;
+TaskHandle_t OutputTask = NULL;
+
+
+void vTask1(void * pvParameters)
+{
+
+}
+
+void vTask2(void * pvParameters)
+{
+    
+}
+
+void vTask3(void * pvParameters)
+{
+    
+}
+
+void vTask4(void * pvParameters)
+{
+    
+}
+
+void vOutputTask(void * pvParameters)
+{
+    
+}
+
+
 
 void vDrawScreenExercise4(void *pvParameters)
 {
@@ -49,16 +82,76 @@ int xCreateSchedulingPrioritiesTestTasks(void)
             goto err_draw_screen_exercise4;
         }
 
+    if (xTaskCreate(vTask1, "Task1", mainGENERIC_STACK_SIZE, NULL, 1,
+                        &Task1) != pdPASS){
+            PRINT_TASK_ERROR("Task1");
+            goto err_task1;
+        }
+    
+    if (xTaskCreate(vTask2, "Task2", mainGENERIC_STACK_SIZE, NULL, 2,
+                        &Task2) != pdPASS){
+            PRINT_TASK_ERROR("Task2");
+            goto err_task2;
+        }
+    
+    if (xTaskCreate(vTask3, "Task3", mainGENERIC_STACK_SIZE, NULL, 3,
+                        &Task3) != pdPASS){
+            PRINT_TASK_ERROR("Task3");
+            goto err_task3;
+        }
+
+    if (xTaskCreate(vTask4, "Task4", mainGENERIC_STACK_SIZE, NULL, 4,
+                        &Task4) != pdPASS){
+            PRINT_TASK_ERROR("Task4");
+            goto err_task4;
+        }
+
+    if (xTaskCreate(vOutputTask, "OutputTask", mainGENERIC_STACK_SIZE, NULL, 1,
+                        &OutputTask) != pdPASS){
+            PRINT_TASK_ERROR("OutputTask");
+            goto err_output_task;
+        }
+
     vTaskSuspend(DrawScreenExercise4);
+    vTaskSuspend(Task1);
+    vTaskSuspend(Task2);
+    vTaskSuspend(Task3);
+    vTaskSuspend(Task4);
+    vTaskSuspend(OutputTask);
 
     return 0;
 
-    err_draw_screen_exercise4:
+err_output_task:
+    vTaskDelete(Task4);
+err_task4:
+    vTaskDelete(Task3);
+err_task3:
+    vTaskDelete(Task2);
+err_task2:
+    vTaskDelete(Task1);
+err_task1:
+    vTaskDelete(DrawScreenExercise4);
+err_draw_screen_exercise4:
     return -1;
 }
 
 void vDeleteSchedulingPrioritiesTestTasks(void){
     if(DrawScreenExercise4){
         vTaskDelete(DrawScreenExercise4);
+    }
+    if(Task1){
+        vTaskDelete(Task1);
+    }
+    if(Task2){
+        vTaskDelete(Task2);
+    }
+    if(Task3){
+        vTaskDelete(Task3);
+    }
+    if(Task4){
+        vTaskDelete(Task4);
+    }
+    if(OutputTask){
+        vTaskDelete(OutputTask);
     }
 }
