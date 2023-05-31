@@ -52,16 +52,19 @@ void vStateTwoExit(void)
 }
 void vStateThreeEnter(void)
 {
-    vTaskResume(DrawScreenExercise4);
+    // vTaskResume(DrawScreenExercise4);
+    vTaskResume(OutputTask);
     vTaskResume(Task1);
-    vTaskResume(Task2);
+    // vTaskResume(Task2);
 }
 
 void vStateThreeExit(void)
 {
-    vTaskSuspend(DrawScreenExercise4);
+    // vTaskSuspend(DrawScreenExercise4);
+    vTaskSuspend(OutputTask);
     vTaskSuspend(Task1);
-    vTaskSuspend(Task2);
+    // vTaskSuspend(Task2);
+    StartingWakeTime = xTaskGetTickCount();
 }
 
 int vCheckStateInput(void)
