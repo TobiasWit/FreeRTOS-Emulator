@@ -14,10 +14,21 @@ extern TaskHandle_t Task4;
 extern TaskHandle_t OutputTask;
 
 extern SemaphoreHandle_t WakeTask3;
+extern SemaphoreHandle_t StartingState3;
 
 extern QueueHandle_t PrintNumbersQueue;
 
 extern TickType_t StartingWakeTime;
+
+
+typedef struct coord_number_tupel{
+    coord_t coord;
+    int value;
+} coord_number_tupel_t;
+
+extern signed short count_array[15];
+extern coord_number_tupel_t coord_number[50];
+
 
 typedef struct number {
     int value;

@@ -3,6 +3,7 @@
 #include "queue.h"
 #include "gfx_draw.h"
 #include "timers.h"
+#include <string.h>
 
 #include "buttons.h"
 #include "main.h"
@@ -52,10 +53,17 @@ void vStateTwoExit(void)
 }
 void vStateThreeEnter(void)
 {
+    StartingWakeTime = xTaskGetTickCount();
+    
     // vTaskResume(DrawScreenExercise4);
     vTaskResume(OutputTask);
     vTaskResume(Task1);
-    // vTaskResume(Task2);
+    vTaskResume(Task2);
+    vTaskResume(Task3);
+    vTaskResume(Task4);
+    xSemaphoreGive(StartingState3);
+
+    
 }
 
 void vStateThreeExit(void)
@@ -63,8 +71,17 @@ void vStateThreeExit(void)
     // vTaskSuspend(DrawScreenExercise4);
     vTaskSuspend(OutputTask);
     vTaskSuspend(Task1);
-    // vTaskSuspend(Task2);
-    StartingWakeTime = xTaskGetTickCount();
+    vTaskSuspend(Task2);
+    vTaskSuspend(Task3);
+    vTaskSuspend(Task4);
+    // for(int i=0; i<15; i++){
+    // count_array[i]=0;
+    // }
+    memset(count_array, 0, sizeof(count_array));
+    memset(coord_number, 0, sizeof(coord_number));
+    // for(int i=0; i<50; i++){
+    //     memset(&coord_number[i], 0, sizeof(coord_number_tupel_t));
+    // }
 }
 
 int vCheckStateInput(void)
