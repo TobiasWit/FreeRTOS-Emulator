@@ -1,3 +1,6 @@
+#ifndef __MOVING_OBJECT_H__
+#define __MOVING_OBJECT_H__
+
 
 #include "gfx_draw.h"
 
@@ -112,8 +115,20 @@ void writeMouseCoord();
 */
 void moveScreenInMouseDirection();
 
+/**
+ * @brief Main task in state one, draws the screen and all the objects... on the screen
+*/
 void vMovingObjectsDisplay(void *pvParameters);
 
+/**
+ * @brief creates all the needed tasks for state one
+ * @return 0 on succes
+*/
 int xCreateMovingObjectsDisplayTasks(void);
 
+/**
+ * @brief deletes all the needed tasks for state one
+*/
 void vDeleteMovingObjectsDisplayTasks(void);
+
+#endif

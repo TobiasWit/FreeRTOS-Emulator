@@ -6,7 +6,6 @@
 #include "gfx_draw.h"
 #include "gfx_font.h"
 
-#include <time.h>
 #include "task.h"
 #include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
@@ -23,11 +22,10 @@
 #include "scheduling_priorities_test.h"
 
 
-
 #define mainGENERIC_PRIORITY (tskIDLE_PRIORITY)
 #define mainGENERIC_STACK_SIZE ((unsigned short)2560)
 
-// TaskHandle_t DrawScreenExercise4 = NULL;
+
 TaskHandle_t Task1 = NULL;
 TaskHandle_t Task2 = NULL;
 TaskHandle_t Task3 = NULL;
@@ -35,25 +33,26 @@ TaskHandle_t Task4 = NULL;
 TaskHandle_t OutputTask = NULL;
 
 SemaphoreHandle_t WakeTask3 = NULL;
-SemaphoreHandle_t StartingState3 = NULL;
 
 QueueHandle_t PrintNumbersQueue = NULL;
 
 TickType_t StartingWakeTime = 0;
 
+signed short count_array[15] = {0} ;
+coord_number_tupel_t coord_number[50] = {0};
+
 void addToQueueSuspendTasks(number_t *inQueue, TickType_t *lastWakeTime,
                 TaskHandle_t Taskx, TickType_t delay)
 {   
-    if(xSemaphoreTake(StartingState3, 0) ==pdTRUE){
-                    StartingWakeTime = xTaskGetTickCount();
-                }
     *lastWakeTime = xTaskGetTickCount();
+    //only send values of the first 15 ticks to the queue
     if (*lastWakeTime < StartingWakeTime + 15){
         inQueue->tick = *lastWakeTime - StartingWakeTime;
         
         xQueueSend(PrintNumbersQueue, inQueue, portMAX_DELAY);
 
         if (Taskx == Task2){
+            //wake task 3
             xSemaphoreGive(WakeTask3);
         }
         if(Taskx != Task3){
@@ -110,19 +109,10 @@ void vTask4(void * pvParameters)
     }   
 }
 
-
-
-
-signed short count_array[15] = {0} ;
-
-    coord_number_tupel_t coord_number[50] = {0};
-
 void vOutputTask(void * pvParameters)
 {
     number_t queueBuffer = {0};
     
-    
-
     coord_t printMessageSize = {0};
     coord_t coordOffset = {0};
     
@@ -132,6 +122,7 @@ void vOutputTask(void * pvParameters)
     
     gfxFontSetSize((ssize_t)20);
 
+    //gets the size of the messages that will be printed
     sprintf(str, "Tick 15:");
     gfxGetTextSize((char *)str, &text_width, &text_height);
     printMessageSize.y = text_height + 5;
@@ -152,18 +143,15 @@ void vOutputTask(void * pvParameters)
                 vGetButtonInput();
                 gfxDrawClear(Green);
 
-                
-
                 for (int i = 1; i <=15; i++){
                     sprintf(str, "Tick %d:", i);
                     gfxDrawText(str, 10,
-                                    coordOffset.y + printMessageSize.y * (i - 1), Black);
-                    
+                                    coordOffset.y + printMessageSize.y * (i - 1), Black);  
                 }
                 
                 hilf=0;
                 while(xQueueReceive(PrintNumbersQueue, &queueBuffer, 0) == pdTRUE){
-
+                        //gives every value certain coordinates
                     coord_number[hilf].value = queueBuffer.value;
                     coord_number[hilf].coord.x = 
                             coordOffset.x + printMessageSize.x * count_array[queueBuffer.tick];
@@ -176,12 +164,12 @@ void vOutputTask(void * pvParameters)
                 
                 hilf = 0;
                 while(coord_number[hilf].value != 0){
+                    //prints the values
                     sprintf(str, "%d", coord_number[hilf].value);
                     gfxDrawText(str, coord_number[hilf].coord.x, coord_number[hilf].coord.y, Black);
        
                     hilf ++;
                 }
-                
 
                 vCheckStateInput();
             }
@@ -235,13 +223,6 @@ int xCreateSchedulingPrioritiesTestTasks(void)
         goto err_wake_task3;
     }
 
-    StartingState3 = xSemaphoreCreateBinary();
-    if (!StartingState3) {
-        PRINT_ERROR("Failed to create WakeTask3");
-        goto err_starting_state3;
-    }
-
-    // vTaskSuspend(DrawScreenExercise4);
     vTaskSuspend(Task1);
     vTaskSuspend(Task2);
     vTaskSuspend(Task3);
@@ -250,8 +231,6 @@ int xCreateSchedulingPrioritiesTestTasks(void)
 
     return 0;
 
-err_starting_state3:
-    vQueueDelete(WakeTask3);
 err_wake_task3:
     vQueueDelete(PrintNumbersQueue);
 err_print_numbers_queue:
@@ -265,16 +244,11 @@ err_task3:
 err_task2:
     vTaskDelete(Task1);
 err_task1:
-//     vTaskDelete(DrawScreenExercise4);
-// err_draw_screen_exercise4:
     return -1;
 }
 
 void vDeleteSchedulingPrioritiesTestTasks(void)
 {
-    // if(DrawScreenExercise4){
-    //     vTaskDelete(DrawScreenExercise4);
-    // }
     if(Task1){
         vTaskDelete(Task1);
     }
@@ -289,6 +263,12 @@ void vDeleteSchedulingPrioritiesTestTasks(void)
     }
     if(OutputTask){
         vTaskDelete(OutputTask);
+    }
+    if(PrintNumbersQueue){
+        vQueueDelete(PrintNumbersQueue);
+    }
+    if(WakeTask3){
+        vSemaphoreDelete(WakeTask3);
     }
 
     //delete the semaphores and queues

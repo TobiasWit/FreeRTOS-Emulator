@@ -92,8 +92,9 @@ void vNotifyButtonPressTask(void *pvParameters)
                 xSemaphoreGive(button_press_TR.lock);
             }
         }
-    }
+
     vTaskDelay(10);
+    }
 }
 
 void vSemaphoreButtonPressTask(void *pvPatameters)
@@ -105,8 +106,9 @@ void vSemaphoreButtonPressTask(void *pvPatameters)
                 xSemaphoreGive(button_press_TR.lock);
             }
         }
-    }
+
     vTaskDelay(10);
+    }
 }
 
 void writePressedButtonsCountTR(void)
@@ -159,11 +161,7 @@ void vSecondsCounterTask(void *pvParameters)
                 lastWakeTime = xTaskGetTickCount();
             }
         }
-        
-        // if(xSemaphoreTake(seconds_count1.lock, portMAX_DELAY) == pdTRUE){
-        //         seconds_count1.value ++;
-        //         xSemaphoreGive(seconds_count1.lock);
-        //     }
+
         vTaskDelay(5);
     }
     
