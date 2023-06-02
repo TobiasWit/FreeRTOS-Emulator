@@ -26,8 +26,7 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
-extern TaskHandle_t MovingObjectsDisplay;
-extern TaskHandle_t CheckInputTask;
+
 
 extern SemaphoreHandle_t DrawSignal;
 

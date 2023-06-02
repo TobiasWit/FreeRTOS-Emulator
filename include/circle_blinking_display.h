@@ -14,6 +14,7 @@ extern TaskHandle_t NotifyButtonPressTask;
 extern TaskHandle_t SemaphoreButtonPressTask;
 extern TaskHandle_t ResetButtonPressTRTask;
 extern TaskHandle_t SecondsCounterTask;
+extern TaskHandle_t CheckInputTaskStateTwo;
 
 extern SemaphoreHandle_t ButtonPressR;
 
@@ -40,10 +41,10 @@ struct __attribute__((__packed__)) common_struct {
 
 /// @brief Creates the demo tasks found in demo_tasks.c
 /// @return 0 on success
-int xCreateDemoTask(void);
+int xCreateCircleBlinkingDisplayTasks(void);
 
 /// @brief Deletes the demo tasks found in demo_tasks.c
-void vDeleteDemoTask(void);
+void vDeleteCircleBlinkingDisplayTasks(void);
 
 void resetButtonCountTRCallback(TimerHandle_t timer);
 

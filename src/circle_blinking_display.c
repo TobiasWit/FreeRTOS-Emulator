@@ -19,7 +19,7 @@
 #include "state_machine.h"
 #include "draw.h"
 #include "moving_object.h"
-#include "buttons_count.h"
+#include "check_input.h"
 
 
 
@@ -36,6 +36,7 @@ TaskHandle_t NotifyButtonPressTask = NULL;
 TaskHandle_t SemaphoreButtonPressTask = NULL;
 TaskHandle_t ResetButtonPressTRTask = NULL;
 TaskHandle_t SecondsCounterTask = NULL;
+TaskHandle_t CheckInputTaskStateTwo = NULL;
 
 SemaphoreHandle_t ButtonPressR = NULL;
 
@@ -225,7 +226,7 @@ void vCircleBlnkingDisplay(void *pvParamters)
 
 
 
-int xCreateDemoTask(void)
+int xCreateCircleBlinkingDisplayTasks(void)
 {
     
 
@@ -278,6 +279,12 @@ int xCreateDemoTask(void)
             goto err_seconds_counter_task;
         }
 
+    if (xTaskCreate(vCheckInputTaskStateTwo, "CheckInputTaskStateTwo", mainGENERIC_STACK_SIZE, NULL,
+                        1, &CheckInputTaskStateTwo) != pdPASS){
+        PRINT_TASK_ERROR("CheckInputTaskStateTwo");
+        goto err_check_input_task_state_two;
+        }
+
     button_press_TR.lock = xSemaphoreCreateMutex();
         if (!button_press_TR.lock) {
             PRINT_ERROR("Failed to create button_press_TR lock");
@@ -323,6 +330,8 @@ err_seconds_count1_lock:
 err_button_press_r:
     vSemaphoreDelete(button_press_TR.lock);
 err_button_press_tr_lock:
+    vTaskDelete(CheckInputTaskStateTwo);
+err_check_input_task_state_two:
     vTaskDelete(SecondsCounterTask);
 err_seconds_counter_task:
     vTaskDelete(ResetButtonPressTRTask);
@@ -340,7 +349,7 @@ err_task2:
     return -1;
 }
 
-void vDeleteDemoTask(void)
+void vDeleteCircleBlinkingDisplayTasks(void)
 {
     if (CircleBlinkingDisplay) {
         vTaskDelete(CircleBlinkingDisplay);

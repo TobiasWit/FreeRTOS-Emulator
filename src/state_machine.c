@@ -7,6 +7,7 @@
 
 #include "buttons.h"
 #include "main.h"
+#include "moving_object.h"
 #include "circle_blinking_display.h"
 #include "check_input.h"
 #include "state_machine.h"
@@ -17,11 +18,13 @@
 void vStateOneEnter(void)
 {
     vTaskResume(MovingObjectsDisplay);
+    vTaskResume(CheckInputTaskStateOne);
 }
 
 void vStateOneExit(void)
 {
     vTaskSuspend(MovingObjectsDisplay);
+    vTaskSuspend(CheckInputTaskStateOne);
 }
 
 void vStateTwoEnter(void)
@@ -29,7 +32,7 @@ void vStateTwoEnter(void)
     vTaskResume(CircleBlinkingDisplay);
     vTaskResume(CircleBlinkingStaticTask);
     vTaskResume(CircleBlinkingDynamicTask);
-    vTaskResume(CheckInputTask);
+    vTaskResume(CheckInputTaskStateTwo);
     vTaskResume(NotifyButtonPressTask);
     vTaskResume(SemaphoreButtonPressTask);
     vTaskResume(ResetButtonPressTRTask);
@@ -44,7 +47,7 @@ void vStateTwoExit(void)
     vTaskSuspend(CircleBlinkingDisplay);
     vTaskSuspend(CircleBlinkingStaticTask);
     vTaskSuspend(CircleBlinkingDynamicTask);
-    vTaskSuspend(CheckInputTask);
+    vTaskSuspend(CheckInputTaskStateTwo);
     vTaskSuspend(NotifyButtonPressTask);
     vTaskSuspend(SemaphoreButtonPressTask);
     vTaskSuspend(ResetButtonPressTRTask);

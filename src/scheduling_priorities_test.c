@@ -20,7 +20,6 @@
 #include "state_machine.h"
 #include "draw.h"
 #include "moving_object.h"
-#include "buttons_count.h"
 #include "scheduling_priorities_test.h"
 
 

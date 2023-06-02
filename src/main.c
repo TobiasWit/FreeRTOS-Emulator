@@ -26,7 +26,6 @@
 #include "AsyncIO.h"
 
 #include "moving_object.h"
-#include "buttons_count.h"
 #include "circle_blinking_display.h"
 #include "check_input.h"
 #include "state_machine.h"
@@ -48,8 +47,8 @@
 static TaskHandle_t BufferSwap = NULL;
 static TaskHandle_t StateMachine = NULL;
 
-TaskHandle_t MovingObjectsDisplay = NULL;
-TaskHandle_t CheckInputTask = NULL;
+
+
 
 SemaphoreHandle_t DrawSignal = NULL;
 SemaphoreHandle_t ScreenLock = NULL;
@@ -138,20 +137,15 @@ int main(int argc, char *argv[])
         goto err_bufferswap;
     }
 
-    if (xTaskCreate(vMovingObjectsDisplay, "MovingObjectsDisplay", mainGENERIC_STACK_SIZE, NULL,
-                        mainGENERIC_PRIORITY + 1, &MovingObjectsDisplay) != pdPASS) {
-            PRINT_TASK_ERROR("MovingObjectsDisplay");
-            goto err_moving_objects_display_task;
-        }
+    
 
-    if (xTaskCreate(vCheckInputTask, "CheckInputTask", mainGENERIC_STACK_SIZE, NULL,
-                        1, &CheckInputTask) != pdPASS){
-        PRINT_TASK_ERROR("CheckInputTask");
-        goto err_check_input_task;
-        }
+    
 
+    if(xCreateMovingObjectsDisplayTasks()){
+        goto err_moving_objects_display_tasks;
+    }
 
-    if (xCreateDemoTask()){
+    if (xCreateCircleBlinkingDisplayTasks()){
         goto err_demotask;
     }
 
@@ -164,8 +158,8 @@ int main(int argc, char *argv[])
     }
 
     //Suspending taskes, because the state machine is managing them
-    vTaskSuspend (MovingObjectsDisplay);
-    vTaskSuspend (CheckInputTask);
+    
+    vTaskSuspend (CheckInputTaskStateTwo);
 
     gfxFUtilPrintTaskStateList();
     
@@ -176,12 +170,10 @@ int main(int argc, char *argv[])
 err_statemachine:
     vDeleteSchedulingPrioritiesTestTasks();
 err_scheduling_priorities_test_tasks:
-    vDeleteDemoTask();
+    vDeleteCircleBlinkingDisplayTasks();
 err_demotask:
-    vTaskDelete (CheckInputTask);
-err_check_input_task:
-    vTaskDelete (MovingObjectsDisplay);
-err_moving_objects_display_task:
+    vDeleteMovingObjectsDisplayTasks();
+err_moving_objects_display_tasks:
     vTaskDelete(BufferSwap);
 err_bufferswap:
     vTaskDelete(StateMachine);

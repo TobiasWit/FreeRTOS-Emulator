@@ -4,6 +4,13 @@
 
 ### Button explanation
 
+First up: Since I did not know, if the button press operations, seconds counter, etc. should react all
+    the time or just while being in the state in which a certain task is displayed on the screen, I
+    decided that thouse operations should only work while being in the correct state. For example:
+    the seconds counter in state two counts the secounds state two is running, and not the seconds
+    the whole program is running. Same goes for all the button press operations (except Q and E): e.g. the count of button A only increments by pressing button A while being in state 1.
+    If the questions where meant the other way around it would be an easy fix, by just running ALL the checkInput tasks the whole time and not suspending and resuming them when switching to another state.
+
 Press button Q to quit.
 Press button E to switch to the next state.
 
@@ -18,7 +25,8 @@ Press button R, increments the number of times button R was pressed (via semapho
 Count of R and T resets every 15 seconds.
 Press button S to stop or restart the seconds counter.
 
-State 3 (Exercise 4):
+
+State 3 (Exercise 4):cm
 No user input.
 
 ### Exercise questions answerd

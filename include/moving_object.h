@@ -1,5 +1,11 @@
 
 #include "gfx_draw.h"
+
+
+extern TaskHandle_t MovingObjectsDisplay;
+extern TaskHandle_t CheckInputTaskStateOne;
+
+
 /**
  * @brief Object to represent a moving circle
 */
@@ -107,3 +113,7 @@ void writeMouseCoord();
 void moveScreenInMouseDirection();
 
 void vMovingObjectsDisplay(void *pvParameters);
+
+int xCreateMovingObjectsDisplayTasks(void);
+
+void vDeleteMovingObjectsDisplayTasks(void);

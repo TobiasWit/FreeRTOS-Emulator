@@ -6,12 +6,18 @@
 #include "gfx_font.h"
 #include "gfx_draw.h"
 #include "gfx_event.h"
+#include "gfx_print.h"
 #include "buttons.h"
 
 #include "state_machine.h"
-#include "buttons_count.h"
+#include "check_input.h"
+
+#define mainGENERIC_PRIORITY (tskIDLE_PRIORITY)
+#define mainGENERIC_STACK_SIZE ((unsigned short)2560)
 
 
+TaskHandle_t MovingObjectsDisplay = NULL;
+TaskHandle_t CheckInputTaskStateOne = NULL;
 
 
 circle_moving_t circle_moving1 = {0, 0, 40, Red};
@@ -165,7 +171,7 @@ void vMovingObjectsDisplay(void *pvParameters)
 
                     gfxDrawTriangle(&triangle1[0], Blue);
 
-                    CheckButtonInput();
+           
 
                     writePressedButtonsCount();
 
@@ -181,5 +187,42 @@ void vMovingObjectsDisplay(void *pvParameters)
 
                     prevWakeTime = xLastWakeTime;   
                 }
+    }
+}
+
+
+int xCreateMovingObjectsDisplayTasks(void)
+{
+    if (xTaskCreate(vMovingObjectsDisplay, "MovingObjectsDisplay", mainGENERIC_STACK_SIZE, NULL,
+                        mainGENERIC_PRIORITY + 1, &MovingObjectsDisplay) != pdPASS) {
+            PRINT_TASK_ERROR("MovingObjectsDisplay");
+            goto err_moving_objects_display_task;
+        }
+
+    if (xTaskCreate(vCheckInputTaskStateOne, "CheckInputTaskStateOne", mainGENERIC_STACK_SIZE, NULL,
+                        1, &CheckInputTaskStateOne) != pdPASS){
+        PRINT_TASK_ERROR("CheckInputTaskStateOne");
+        goto err_check_input_task_state_one;
+        }    
+    
+
+    vTaskSuspend (MovingObjectsDisplay);
+    vTaskSuspend (CheckInputTaskStateOne);
+
+    return 0;
+
+err_check_input_task_state_one:
+    vTaskDelete(MovingObjectsDisplay);
+err_moving_objects_display_task:
+    return -1;
+}
+
+void vDeleteMovingObjectsDisplayTasks(void)
+{
+    if (MovingObjectsDisplay) {
+        vTaskDelete(MovingObjectsDisplay);
+    }
+    if (CheckInputTaskStateOne){
+        vTaskDelete(CheckInputTaskStateOne);
     }
 }
